@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ESDEMO.Api/ESDEMO.Api.csproj" />
+    <Project Path="src/ESDEMO.Application/ESDEMO.Application.csproj" />
+    <Project Path="src/ESDEMO.Domain/ESDEMO.Domain.csproj" />
+    <Project Path="src/ESDEMO.Infrastructure/ESDEMO.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ESDEMO.Tests/ESDEMO.Tests.csproj" />
+  </Folder>
+</Solution>

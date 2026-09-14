@@ -1,0 +1,38 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# .NET
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+*.nupkg
+.nuget/
+
+# Next.js / Node.js
+**/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+*.tsbuildinfo
+
+# IDEs
+.idea/
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# OS and logs
+.DS_Store
+Thumbs.db
+*.log
+
+# Local tooling
+.dotnet-home/
+.nuget-packages/
+.pnpm-store/
