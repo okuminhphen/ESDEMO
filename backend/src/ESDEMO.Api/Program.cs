@@ -1,6 +1,7 @@
 using DotNetEnv;
 using ESDEMO.Api.Health;
 using ESDEMO.Api.Middleware;
+using ESDEMO.Api.Security;
 using ESDEMO.Application;
 using ESDEMO.Infrastructure;
 using ESDEMO.Infrastructure.Persistence;
@@ -38,6 +39,10 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+if (!initializeDatabase)
+{
+    builder.Services.AddApiAuthentication(builder.Configuration);
+}
 
 builder.Services
     .AddHealthChecks()
@@ -82,6 +87,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseRateLimiter();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions

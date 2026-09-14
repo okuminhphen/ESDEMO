@@ -2,7 +2,7 @@
 
 ## Trạng thái và quy tắc thực hiện
 
-- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration và bootstrap Identity đã hoàn thành.
+- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration, bootstrap Identity và auth backend đã được triển khai.
 - Chỉ bắt đầu code chức năng khi người dùng nói "proceed" hoặc yêu cầu triển khai rõ ràng.
 - Giữ file này trong quá trình triển khai; cập nhật tiến độ bằng checklist.
 - Chỉ xóa `plan.md` khi toàn bộ phạm vi đã hoàn thành, kiểm thử đạt và nội dung cần duy trì đã chuyển sang README/docs.
@@ -15,12 +15,14 @@
 - [x] Định nghĩa Product, Order, OrderItem, PaymentAttempt, Notification và enum trạng thái.
 - [x] ApplicationUser/Identity, RefreshSession và OutboxMessage ở Infrastructure.
 - [x] IdentityDbContext, DbSet, Fluent API, quan hệ, index, check constraint và concurrency xmin.
-- [x] Chuẩn bị Identity stores và EF design-time package; chưa có login/register/JWT.
+- [x] Chuẩn bị Identity stores và EF design-time package.
 - [x] Test model và ràng buộc trên PostgreSQL tạm; không thay đổi database esdemo.
 - [x] Tạo/review migration InitialSchema và apply vào database esdemo local.
 - [x] Seed idempotent role Admin/Customer và một Admin cấu hình từ `.env` local.
-- [ ] Triển khai authentication, authorization và các use case.
-- Frontend/BFF, API chức năng và Worker chưa triển khai. Tiếp tục giữ plan.md.
+- [x] Auth backend: DTO + validation, MediatR register/login/refresh/logout/me, JWT, role policy, lockout và refresh rotation/reuse.
+- [x] Kiểm thử: 29/29 test backend đạt; thử Admin local và HTTP 413 trên Kestrel. README/docs đã cập nhật; auth không cần migration mới.
+- [ ] Các use case sản phẩm, đơn hàng và thanh toán.
+- Frontend/BFF, API sản phẩm/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. Tiếp tục giữ plan.md.
 - Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
 
 ## 1. Phạm vi và giả định
@@ -219,8 +221,9 @@ Application/
 
 ## 9. Thứ tự triển khai
 
-- [ ] 1. Chốt chi tiết auth/session, email/MFA và các giả định phạm vi khi nhận lệnh proceed.
-- [ ] 2. Identity, migrations user/role/session, bootstrap Admin, register/login/refresh/logout/me, phân quyền và giao diện auth.
+- [x] 1. Chốt auth backend: JWT 10 phút, refresh 7 ngày với rotation/reuse; email verification, password recovery, MFA và BFF để bước sau. Chi tiết trong docs/authentication.md.
+- [x] 2a. Backend: Identity, migrations user/role/session, bootstrap Admin, DTO/validation, register/login/refresh/logout/me và role policies.
+- [ ] 2b. Frontend/BFF, giao diện auth, email verification, password recovery và MFA.
 - [ ] 3. Product entity/migration, Admin CRUD/soft delete, danh sách/chi tiết cho khách, validation và giao diện.
 - [ ] 4. Order/OrderItems, mua ngay, snapshot giá, checkout và lịch sử/chi tiết đơn có ownership check.
 - [ ] 5. Mock payment, transaction, idempotency, concurrency và xử lý hết hàng/hết hạn.

@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The starter provides health checks, a DTO-validation/MediatR example, tests, and CI. The backend includes the initial Identity and purchasing migration plus an explicit database initializer; business endpoints remain the next step. See [Database model](docs/database-model.md) for the implemented constraints and current limits.
+The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The backend includes the initial purchasing schema and an explicit Admin initializer. Register/login/refresh/logout/me are implemented; product and purchasing endpoints remain the next step. See [Authentication](docs/authentication.md) and [Database model](docs/database-model.md).
 
 ## Technology
 
@@ -51,6 +51,14 @@ Copy-Item frontend/.env.example frontend/.env.local
 docker compose up -d
 docker compose ps
 ```
+
+Generate a random signing key and put it in the root .env as Jwt__SigningKey:
+
+```powershell
+[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(64))
+```
+
+The committed example intentionally leaves this secret empty. See [auth configuration and API examples](docs/authentication.md).
 
 Start the API in a second terminal:
 

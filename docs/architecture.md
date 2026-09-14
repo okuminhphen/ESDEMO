@@ -67,7 +67,9 @@ Contains controllers, request/response contracts, middleware, OpenAPI and operat
 
 The sample `POST /api/examples/validate-text` endpoint demonstrates ASP.NET Core DTO validation. Replace it with the first real feature when the contract pattern is understood.
 
-Validation errors use `ValidationProblemDetails`. Unhandled exceptions use Problem Details and include a trace identifier; exception details are returned only in Development.
+Validation errors use `ValidationProblemDetails`. Other errors use Problem Details and include a trace identifier. Auth failures never expose provider details, including in Development.
+
+Auth DTOs and DataAnnotations live in Application/Auth/Dtos and are shared with the API. MediatR validates each auth command payload before dispatch. Infrastructure implements IAuthService using Identity and transactional PostgreSQL operations; controllers do not expose Identity entities. JWT middleware checks account status and current roles. See [Authentication](authentication.md).
 
 ## Frontend structure
 
@@ -106,7 +108,7 @@ When messaging is introduced:
 
 ## Decisions intentionally deferred
 
-- Authentication and authorization mechanism
+- Frontend/BFF sessions, email verification, password recovery and Admin MFA
 - Worker process
 - Outbox/inbox implementation
 - Domain repositories

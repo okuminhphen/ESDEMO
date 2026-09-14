@@ -1,3 +1,4 @@
+using ESDEMO.Application.Auth.Abstractions;
 using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Options;
 using ESDEMO.Infrastructure.Persistence;
@@ -16,11 +17,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Database") ?? string.Empty;
-
         services
             .AddOptions<DatabaseOptions>()
-            .Configure(options => options.ConnectionString = connectionString)
+            .Configure(options => options.ConnectionString = configuration.GetConnectionString("Database") ?? string.Empty)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -64,6 +63,16 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddScoped<DatabaseInitializer>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<DummyPasswordHash>();
+        services.AddScoped<IAuthService, IdentityAuthService>();
+        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(options => options.HasValidSigningKey(), "Jwt:SigningKey must be Base64 encoding of at least 32 random bytes.")
+            .ValidateOnStart();
+        services.Configure<PasswordHasherOptions>(options => options.IterationCount = 220_000);
 
         services.AddSingleton(serviceProvider =>
         {

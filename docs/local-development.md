@@ -65,6 +65,10 @@ POST http://localhost:5000/api/examples/validate-text
 GET  http://localhost:5000/openapi/v1.json
 ```
 
+## Authentication setup and testing
+
+Set Jwt__Issuer, Jwt__Audience and a random Base64 Jwt__SigningKey in the ignored root .env before starting the API. The signing key is deliberately blank in .env.example. The API exposes register/login/refresh/logout/me and accepts the seeded Admin credentials. See [Authentication](authentication.md) for complete DTO bodies, key generation, refresh/logout behavior and limits.
+
 ## Request logs
 
 The API writes structured request logs to the terminal running `dotnet run`. Each entry includes the HTTP method, path, status code, elapsed time and trace ID. Request bodies, authorization headers, cookies and query strings are intentionally excluded.

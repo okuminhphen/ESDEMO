@@ -2,11 +2,11 @@
 
 ## Current status
 
-The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication and business endpoints are not implemented yet.
+The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication endpoints are implemented; purchasing endpoints remain pending.
 
 ApplicationDbContext inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>. It calls the base Identity mapping first, then loads IEntityTypeConfiguration implementations from Infrastructure.
 
-Identity user/role stores and password/lockout policy are registered in Infrastructure. This enables persistence and bootstrap services; it does not configure JWT, expose login/register or enforce API role policies.
+Identity user/role stores, password hashing, login lockout and refresh-session persistence are registered in Infrastructure. API JWT validation and Admin/Customer policies are implemented; see [Authentication](authentication.md) for DTOs, transactions and session behavior.
 
 ## Ownership and structure
 
@@ -119,7 +119,7 @@ dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 
 The command applies pending migrations and performs idempotent Identity bootstrap, then exits without starting the HTTP server. It can be run again safely. Do not use `EnsureCreated` on the application database, and do not run migrations automatically during every API startup.
 
-The next application step is authentication handlers, JWT/refresh-session behavior and API authorization.
+Authentication handlers, JWT/refresh-session behavior and API authorization are implemented. The next application step is product CRUD with Admin policies and public product queries.
 
 ## References
 

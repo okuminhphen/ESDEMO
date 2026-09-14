@@ -17,6 +17,6 @@ public sealed class AdminSeedOptions
     public string DisplayName { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(12)]
+    [StringLength(128, MinimumLength = 12)]
     public string Password { get; set; } = string.Empty;
 }
