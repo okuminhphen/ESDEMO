@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The initial `main` branch intentionally contains no business domain. It provides a runnable baseline, health checks, one DTO-validation example, tests, and CI so future features can be added from `develop` without first rebuilding the foundation.
+The starter provides health checks, a DTO-validation/MediatR example, tests, and CI. The backend now defines the Identity and purchasing database model; migrations and business endpoints are the next steps. See [Database model](docs/database-model.md) for the implemented constraints and current limits.
 
 ## Technology
 

@@ -1,5 +1,7 @@
+using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Options;
 using ESDEMO.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +42,10 @@ public static class DependencyInjection
                 npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
             });
         });
+
+        services.AddIdentityCore<ApplicationUser>(options => options.User.RequireUniqueEmail = true)
+            .AddRoles<IdentityRole<Guid>>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddSingleton(serviceProvider =>
         {

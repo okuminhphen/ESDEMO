@@ -2,13 +2,25 @@
 
 ## Trạng thái và quy tắc thực hiện
 
-- Trạng thái: đã lập kế hoạch, chưa được yêu cầu triển khai.
+- Trạng thái: đang triển khai theo từng phần được yêu cầu; hiện chỉ làm backend entity và EF mapping.
 - Chỉ bắt đầu code chức năng khi người dùng nói "proceed" hoặc yêu cầu triển khai rõ ràng.
 - Giữ file này trong quá trình triển khai; cập nhật tiến độ bằng checklist.
 - Chỉ xóa `plan.md` khi toàn bộ phạm vi đã hoàn thành, kiểm thử đạt và nội dung cần duy trì đã chuyển sang README/docs.
 - Làm việc trên `develop`; sau mỗi phần công việc hoàn tất và kiểm tra phù hợp, tự commit bằng tiếng Anh.
 - Không tự push. Người dùng tự push, trừ khi yêu cầu push rõ ràng cho lần đó.
 - Không tự merge `develop` vào `main`.
+
+## Tiến độ hiện tại: model backend
+
+- [x] Định nghĩa Product, Order, OrderItem, PaymentAttempt, Notification và enum trạng thái.
+- [x] ApplicationUser/Identity, RefreshSession và OutboxMessage ở Infrastructure.
+- [x] IdentityDbContext, DbSet, Fluent API, quan hệ, index, check constraint và concurrency xmin.
+- [x] Chuẩn bị Identity stores và EF design-time package; chưa có login/register/JWT.
+- [x] Test model và ràng buộc trên PostgreSQL tạm; không thay đổi database esdemo.
+- [ ] Tạo migration InitialSchema, review SQL/snapshot rồi mới apply theo bước được yêu cầu tiếp.
+- [ ] Seed role/Admin, triển khai authentication, authorization và các use case.
+- Frontend/BFF, API chức năng và Worker chưa triển khai. Tiếp tục giữ plan.md.
+- Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
 
 ## 1. Phạm vi và giả định
 

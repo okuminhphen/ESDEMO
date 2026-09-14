@@ -100,15 +100,26 @@ docker compose config --quiet
 
 ## Add the first EF Core migration
 
-Do this after the first entity and its EF configuration are added:
+The entities and mappings are now defined. No migration has been generated or applied yet.
+Review [Database model](database-model.md) before the next schema-change step.
+
+Run from the backend directory so the local dotnet-ef tool manifest is discovered:
 
 ```powershell
-dotnet tool restore --tool-manifest backend/.config/dotnet-tools.json
-dotnet ef migrations add InitialCreate --project backend/src/ESDEMO.Infrastructure --startup-project backend/src/ESDEMO.Api --output-dir Persistence/Migrations
-dotnet ef database update --project backend/src/ESDEMO.Infrastructure --startup-project backend/src/ESDEMO.Api
+cd backend
+dotnet tool restore
+dotnet ef migrations add InitialSchema --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api --output-dir Persistence/Migrations -- --environment Development
 ```
 
-Commit the migration with the model change.
+Review the generated migration and snapshot first. After approval of that schema step:
+
+```powershell
+dotnet ef database update --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api -- --environment Development
+```
+
+Development explicitly enables the existing local .env loader. Commit migrations together with model changes.
+The initial migration will cover both Identity and the purchasing model.
+The PostgreSQL model tests use a separate disposable database; see [test instructions](database-model.md#validation).
 
 ## Reset local infrastructure
 

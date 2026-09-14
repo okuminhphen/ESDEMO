@@ -31,7 +31,7 @@ The physical references are:
 
 Contains entities, value objects, aggregates, domain services, domain events and business rules. It must not reference Entity Framework Core, RabbitMQ or ASP.NET Core.
 
-The project is intentionally empty until the first domain concept is known. Avoid generic base classes that provide no demonstrated behavior.
+The Domain now defines Product, Order, OrderItem, PaymentAttempt and Notification. Identity-specific user/session types and OutboxMessage live in Infrastructure. Workflow behavior will be added with each use case; see [Database model](database-model.md) for current guarantees and deferred rules.
 
 ### Application
 
@@ -57,7 +57,7 @@ Commands change state. Queries only read and return application models. Both may
 
 ### Infrastructure
 
-Contains Entity Framework Core, PostgreSQL configuration, repository implementations and RabbitMQ integration. `ApplicationDbContext` is configured now, while migrations and repositories wait for the first entity.
+Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model is implemented; migrations, role bootstrap, repositories and messaging workers remain separate next steps.
 
 Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specific repository when a use case needs persistence behavior that should be expressed in domain terms.
 

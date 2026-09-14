@@ -13,6 +13,25 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: esdemo
+          POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U esdemo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ESDEMO_RUN_DATABASE_TESTS: "1"
+      ESDEMO_TEST_POSTGRES_HOST: localhost
+      ESDEMO_TEST_POSTGRES_PORT: "5432"
+      ESDEMO_TEST_POSTGRES_USER: esdemo
+      ESDEMO_TEST_POSTGRES_PASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
