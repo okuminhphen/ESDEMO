@@ -57,7 +57,7 @@ Commands change state. Queries only read and return application models. Both may
 
 ### Infrastructure
 
-Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model is implemented; migrations, role bootstrap, repositories and messaging workers remain separate next steps.
+Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin; business repositories and messaging workers remain future steps.
 
 Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specific repository when a use case needs persistence behavior that should be expressed in domain terms.
 

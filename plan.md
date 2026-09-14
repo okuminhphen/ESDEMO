@@ -2,7 +2,7 @@
 
 ## Trạng thái và quy tắc thực hiện
 
-- Trạng thái: đang triển khai theo từng phần được yêu cầu; hiện chỉ làm backend entity và EF mapping.
+- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration và bootstrap Identity đã hoàn thành.
 - Chỉ bắt đầu code chức năng khi người dùng nói "proceed" hoặc yêu cầu triển khai rõ ràng.
 - Giữ file này trong quá trình triển khai; cập nhật tiến độ bằng checklist.
 - Chỉ xóa `plan.md` khi toàn bộ phạm vi đã hoàn thành, kiểm thử đạt và nội dung cần duy trì đã chuyển sang README/docs.
@@ -17,8 +17,9 @@
 - [x] IdentityDbContext, DbSet, Fluent API, quan hệ, index, check constraint và concurrency xmin.
 - [x] Chuẩn bị Identity stores và EF design-time package; chưa có login/register/JWT.
 - [x] Test model và ràng buộc trên PostgreSQL tạm; không thay đổi database esdemo.
-- [ ] Tạo migration InitialSchema, review SQL/snapshot rồi mới apply theo bước được yêu cầu tiếp.
-- [ ] Seed role/Admin, triển khai authentication, authorization và các use case.
+- [x] Tạo/review migration InitialSchema và apply vào database esdemo local.
+- [x] Seed idempotent role Admin/Customer và một Admin cấu hình từ `.env` local.
+- [ ] Triển khai authentication, authorization và các use case.
 - Frontend/BFF, API chức năng và Worker chưa triển khai. Tiếp tục giữ plan.md.
 - Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
 

@@ -2,11 +2,11 @@
 
 ## Current status
 
-The backend now defines the complete persistence model from the purchasing plan. No migration has been created or applied, no roles/admin have been seeded, and no authentication or business endpoints have been implemented in this step.
+The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication and business endpoints are not implemented yet.
 
 ApplicationDbContext inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>. It calls the base Identity mapping first, then loads IEntityTypeConfiguration implementations from Infrastructure.
 
-Identity user/role stores are registered in Infrastructure. This enables persistence services; it does not configure JWT, expose login/register, enforce role policies, or seed roles.
+Identity user/role stores and password/lockout policy are registered in Infrastructure. This enables persistence and bootstrap services; it does not configure JWT, expose login/register or enforce API role policies.
 
 ## Ownership and structure
 
@@ -105,24 +105,21 @@ To run integration tests, set these variables in the test process:
 - ESDEMO_TEST_POSTGRES_USER (default esdemo)
 - ESDEMO_TEST_POSTGRES_PASSWORD (required, supply locally; never commit)
 
-Run dotnet test again. Tests connect to the maintenance database postgres, create a database named esdemo_model_tests_<random>, build its schema, run tests, and drop that exact test database afterward. Use a local/test PostgreSQL account permitted to create databases. The application database esdemo is not used. If the test process is forcibly terminated, a disposable database may remain for manual cleanup.
+Run dotnet test again. Tests connect to the maintenance database postgres, create a database named esdemo_model_tests_<random>, apply the committed migrations, run tests, and drop that exact test database afterward. Use a local/test PostgreSQL account permitted to create databases. The application database esdemo is not used. If the test process is forcibly terminated, a disposable database may remain for manual cleanup.
 
-EnsureCreated is used only inside this disposable fixture. Application deployments must use migrations.
+Coverage includes migration application, idempotent role/Admin seeding, duplicate email, invalid money/stock/status, single successful payment, order ownership foreign keys, history retention, xmin concurrency, refresh family isolation, idempotency uniqueness, JSON outbox validation and event deduplication.
 
-Coverage includes duplicate email, invalid money/stock/status, single successful payment, order ownership foreign keys, history retention, xmin concurrency, refresh family isolation, idempotency uniqueness, JSON outbox validation and event deduplication.
+## Initialize a local database
 
-## Next step: review and generate the initial migration
-
-When authorized, run from backend:
+Set the Admin bootstrap values in the ignored root `.env`. The committed example keeps seeding disabled and contains no usable password. Then run from the repository root:
 
 ```powershell
-dotnet tool restore
-dotnet ef migrations add InitialSchema --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api --output-dir Persistence/Migrations -- --environment Development
+dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 ```
 
-The first migration should contain all currently mapped tables, not just Identity. Review its Up/Down methods and snapshot before applying it to esdemo. Do not use EnsureCreated on esdemo or introduce automatic startup migration as part of this modeling step.
+The command applies pending migrations and performs idempotent Identity bootstrap, then exits without starting the HTTP server. It can be run again safely. Do not use `EnsureCreated` on the application database, and do not run migrations automatically during every API startup.
 
-After reviewing the migration, the next separate steps are database update, idempotent role/admin bootstrap, then authentication handlers and API authorization.
+The next application step is authentication handlers, JWT/refresh-session behavior and API authorization.
 
 ## References
 

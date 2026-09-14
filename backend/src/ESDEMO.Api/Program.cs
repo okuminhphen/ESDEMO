@@ -3,8 +3,11 @@ using ESDEMO.Api.Health;
 using ESDEMO.Api.Middleware;
 using ESDEMO.Application;
 using ESDEMO.Infrastructure;
+using ESDEMO.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
+const string InitializeDatabaseArgument = "--initialize-database";
+var initializeDatabase = args.Contains(InitializeDatabaseArgument, StringComparer.OrdinalIgnoreCase);
 var builder = WebApplication.CreateBuilder(args);
 
 if (builder.Environment.IsDevelopment())
@@ -60,6 +63,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (initializeDatabase)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+    return;
+}
 
 app.UseMiddleware<RequestLoggingMiddleware>();
 

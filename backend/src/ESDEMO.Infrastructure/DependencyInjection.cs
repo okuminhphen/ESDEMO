@@ -30,6 +30,10 @@ public static class DependencyInjection
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services
+            .AddOptions<AdminSeedOptions>()
+            .Bind(configuration.GetSection(AdminSeedOptions.SectionName));
+
         services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
         {
             var databaseOptions = serviceProvider
@@ -43,9 +47,23 @@ public static class DependencyInjection
             });
         });
 
-        services.AddIdentityCore<ApplicationUser>(options => options.User.RequireUniqueEmail = true)
+        services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+                options.Password.RequiredLength = 12;
+                options.Password.RequiredUniqueChars = 4;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<ApplicationDbContext>();
+
+        services.AddScoped<DatabaseInitializer>();
 
         services.AddSingleton(serviceProvider =>
         {

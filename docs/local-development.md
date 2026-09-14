@@ -54,7 +54,7 @@ dotnet restore backend/ESDEMO.slnx
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
-The API loads the root `.env` file for local development without overriding real environment variables. It contains the database connection string, RabbitMQ options, and CORS origins. Set `Cors__AllowedOrigins__0=http://localhost:3000`; add indexed values for further frontend URLs. Production deployments must provide the same keys through their environment or secret manager.
+The API loads the root `.env` file for local development without overriding real environment variables. It contains the database connection string, RabbitMQ options, CORS origins and optional Admin bootstrap values. Set `Cors__AllowedOrigins__0=http://localhost:3000`; add indexed values for further frontend URLs. Production deployments must provide the same keys through their environment or secret manager.
 
 Useful endpoints:
 
@@ -98,28 +98,36 @@ pnpm --dir frontend build
 docker compose config --quiet
 ```
 
-## Add the first EF Core migration
+## Initialize the database and local Admin
 
-The entities and mappings are now defined. No migration has been generated or applied yet.
-Review [Database model](database-model.md) before the next schema-change step.
+The committed `InitialSchema` migration contains Identity and purchasing tables. In the ignored root `.env`, set a strong local password and enable the bootstrap:
 
-Run from the backend directory so the local dotnet-ef tool manifest is discovered:
+```text
+SeedAdmin__Enabled=true
+SeedAdmin__Email=admin@esdemo.local
+SeedAdmin__DisplayName="ESDEMO Administrator"
+SeedAdmin__Password="your-strong-local-password"
+```
+
+Apply pending migrations and seed the `Admin`/`Customer` roles plus the configured Admin:
+
+```powershell
+dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
+```
+
+The initializer exits when complete and is safe to run repeatedly. It does not start the API, log the password or run during normal API startup.
+
+For an existing account with the configured email, the initializer preserves its password and ensures it has the Admin role. Changing `SeedAdmin__Password` does not reset an existing account's password. Use only an email you intend to grant administrator access. New bootstrap accounts have their email marked confirmed; this is an explicit operator action, not the public registration flow.
+
+For a future model change, create and review a new migration from the backend directory:
 
 ```powershell
 cd backend
 dotnet tool restore
-dotnet ef migrations add InitialSchema --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api --output-dir Persistence/Migrations -- --environment Development
+dotnet ef migrations add DescribeTheChange --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api --output-dir Persistence/Migrations -- --environment Development
 ```
 
-Review the generated migration and snapshot first. After approval of that schema step:
-
-```powershell
-dotnet ef database update --project src/ESDEMO.Infrastructure --startup-project src/ESDEMO.Api -- --environment Development
-```
-
-Development explicitly enables the existing local .env loader. Commit migrations together with model changes.
-The initial migration will cover both Identity and the purchasing model.
-The PostgreSQL model tests use a separate disposable database; see [test instructions](database-model.md#validation).
+Review the generated migration and snapshot, then use the initializer to apply it locally. Commit each migration with its model change. PostgreSQL integration tests apply migrations to separate disposable databases; see [test instructions](database-model.md#validation).
 
 ## Reset local infrastructure
 

@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The starter provides health checks, a DTO-validation/MediatR example, tests, and CI. The backend now defines the Identity and purchasing database model; migrations and business endpoints are the next steps. See [Database model](docs/database-model.md) for the implemented constraints and current limits.
+The starter provides health checks, a DTO-validation/MediatR example, tests, and CI. The backend includes the initial Identity and purchasing migration plus an explicit database initializer; business endpoints remain the next step. See [Database model](docs/database-model.md) for the implemented constraints and current limits.
 
 ## Technology
 
@@ -57,6 +57,7 @@ Start the API in a second terminal:
 ```powershell
 dotnet tool restore --tool-manifest backend/.config/dotnet-tools.json
 dotnet restore backend/ESDEMO.slnx
+dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
@@ -77,7 +78,7 @@ Open these URLs:
 | OpenAPI document | http://localhost:5000/openapi/v1.json |
 | RabbitMQ management | http://localhost:15672 |
 
-Database and RabbitMQ credentials are read from `.env`. The values in `.env.example` are public development examples, not real secrets.
+Database, RabbitMQ and optional local Admin bootstrap settings are read from `.env`. Set a strong local `SeedAdmin__Password` and enable the seed before running the explicit database initializer. The values in `.env.example` are public examples, not real secrets.
 
 ## Verify the repository
 
@@ -104,6 +105,10 @@ RabbitMq__Port
 RabbitMq__Username
 RabbitMq__Password
 RabbitMq__VirtualHost
+SeedAdmin__Enabled
+SeedAdmin__Email
+SeedAdmin__DisplayName
+SeedAdmin__Password
 ```
 
 Frontend server configuration:

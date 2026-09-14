@@ -56,8 +56,7 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
         try
         {
             await using var context = CreateContext();
-            // Only this disposable test database uses EnsureCreated; the application must use migrations.
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
         }
         catch
         {
@@ -70,6 +69,9 @@ public sealed class PostgresDatabaseFixture : IAsyncLifetime
         new(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(_testConnectionString ?? throw new InvalidOperationException("Test database is not initialized."))
             .Options);
+
+    public string ConnectionString =>
+        _testConnectionString ?? throw new InvalidOperationException("Test database is not initialized.");
 
     public async Task DisposeAsync()
     {
