@@ -19,7 +19,7 @@ docker compose version
 
 ## Start infrastructure
 
-Docker Compose has safe local defaults, so copying `.env.example` is optional. Copy it when you want to change ports or credentials:
+Docker Compose and the API require the ignored root `.env` file. Create it from the committed example before starting infrastructure:
 
 ```powershell
 Copy-Item .env.example .env
@@ -54,7 +54,7 @@ dotnet restore backend/ESDEMO.slnx
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
-The API loads the root `.env` file for local development without overriding real environment variables. Set `Cors__AllowedOrigins__0=http://localhost:3000` there; add `Cors__AllowedOrigins__1`, `Cors__AllowedOrigins__2`, and so on for further frontend URLs. The API loads the root `.env` file for local development without overriding real environment variables. Set `Cors__AllowedOrigins__0=http://localhost:3000` there; add `Cors__AllowedOrigins__1`, `Cors__AllowedOrigins__2`, and so on for further frontend URLs. Development settings connect to the Docker services at `localhost`. Configuration validation makes the API fail during startup if required production values are missing.
+The API loads the root `.env` file for local development without overriding real environment variables. It contains the database connection string, RabbitMQ options, and CORS origins. Set `Cors__AllowedOrigins__0=http://localhost:3000`; add indexed values for further frontend URLs. Production deployments must provide the same keys through their environment or secret manager.
 
 Useful endpoints:
 
@@ -67,16 +67,20 @@ GET  http://localhost:5000/openapi/v1.json
 
 ## Run the frontend
 
+Create the ignored frontend environment file once:
+
+```powershell
+Copy-Item frontend/.env.example frontend/.env.local
+```
+
+Then run:
+
 ```powershell
 pnpm --dir frontend install
 pnpm --dir frontend dev
 ```
 
-The home page calls the API readiness endpoint from the Next.js server. Override its address in `frontend/.env.local` when required:
-
-```dotenv
-API_BASE_URL=http://localhost:5000
-```
+The home page calls the API readiness endpoint from the Next.js server. Set `API_BASE_URL` in `frontend/.env.local` to the API address for the active environment.
 
 ## Build and test
 

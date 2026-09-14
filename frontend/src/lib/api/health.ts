@@ -12,9 +12,18 @@ export type BackendHealth = {
   checks: HealthCheck[];
 };
 
-const apiBaseUrl = process.env.API_BASE_URL ?? "http://localhost:5000";
+const apiBaseUrl = process.env.API_BASE_URL;
 
 export async function getBackendHealth(): Promise<BackendHealth> {
+  if (!apiBaseUrl) {
+    return {
+      reachable: false,
+      status: "Not configured",
+      apiBaseUrl: "",
+      checks: [],
+    };
+  }
+
   try {
     const response = await fetch(`${apiBaseUrl}/health/ready`, {
       cache: "no-store",

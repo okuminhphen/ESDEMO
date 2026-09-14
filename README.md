@@ -43,10 +43,11 @@ Requirements:
 - pnpm 10
 - Docker Desktop with Docker Compose
 
-From the repository root, create an optional local environment file and start infrastructure:
+From the repository root, create the local configuration files and start infrastructure:
 
 ```powershell
 Copy-Item .env.example .env
+Copy-Item frontend/.env.example frontend/.env.local
 docker compose up -d
 docker compose ps
 ```
@@ -76,7 +77,7 @@ Open these URLs:
 | OpenAPI document | http://localhost:5000/openapi/v1.json |
 | RabbitMQ management | http://localhost:15672 |
 
-RabbitMQ's local username/password are `esdemo` / `esdemo-dev`. These values are development defaults only.
+Database and RabbitMQ credentials are read from `.env`. The values in `.env.example` are public development examples, not real secrets.
 
 ## Verify the repository
 
@@ -92,7 +93,7 @@ The readiness endpoint reports PostgreSQL and RabbitMQ separately. The frontend 
 
 ## Configuration
 
-Development defaults are stored in `appsettings.Development.json` and match Docker Compose defaults. Real credentials must be supplied with environment variables and must never be committed.
+Local runtime configuration lives in the ignored root `.env`; copy `.env.example` before running Docker or the API. `appsettings.json` contains only empty configuration shape and safe logging defaults. Production credentials must be supplied by the deployment platform as environment variables or a secret manager and must never be committed.
 
 Common ASP.NET Core overrides:
 
