@@ -54,7 +54,7 @@ dotnet restore backend/ESDEMO.slnx
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
-Development settings connect to the Docker services at `localhost`. Configuration validation makes the API fail during startup if required production values are missing.
+The API loads the root `.env` file for local development without overriding real environment variables. Set `Cors__AllowedOrigins__0=http://localhost:3000` there; add `Cors__AllowedOrigins__1`, `Cors__AllowedOrigins__2`, and so on for further frontend URLs. The API loads the root `.env` file for local development without overriding real environment variables. Set `Cors__AllowedOrigins__0=http://localhost:3000` there; add `Cors__AllowedOrigins__1`, `Cors__AllowedOrigins__2`, and so on for further frontend URLs. Development settings connect to the Docker services at `localhost`. Configuration validation makes the API fail during startup if required production values are missing.
 
 Useful endpoints:
 

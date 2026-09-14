@@ -1,7 +1,10 @@
+using DotNetEnv;
 using ESDEMO.Api.Health;
 using ESDEMO.Api.Middleware;
 using ESDEMO.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+
+Env.TraversePath().NoClobber().Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
