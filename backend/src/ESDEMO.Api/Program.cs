@@ -4,9 +4,26 @@ using ESDEMO.Api.Middleware;
 using ESDEMO.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
-Env.TraversePath().NoClobber().Load();
-
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Environment.IsDevelopment())
+{
+    var localEnvFile = LocalEnvironment.FindFile(builder.Environment.ContentRootPath);
+
+    if (localEnvFile is not null)
+    {
+        var localConfiguration = Env.NoEnvVars()
+            .Load(localEnvFile)
+            .ToDictionary(
+                pair => pair.Key.Replace("__", ":", StringComparison.Ordinal),
+                pair => (string?)pair.Value,
+                StringComparer.OrdinalIgnoreCase);
+
+        builder.Configuration.AddInMemoryCollection(localConfiguration);
+    }
+
+    builder.Configuration.AddEnvironmentVariables();
+}
 
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
@@ -69,3 +86,21 @@ app.MapControllers();
 app.Run();
 
 public partial class Program;
+
+internal static class LocalEnvironment
+{
+    public static string? FindFile(string startDirectory)
+    {
+        for (var directory = new DirectoryInfo(startDirectory); directory is not null; directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, ".env");
+
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+}
