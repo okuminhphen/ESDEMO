@@ -8,7 +8,7 @@ The initial `main` branch intentionally contains no business domain. It provides
 
 - Next.js 16, React 19, TypeScript and Tailwind CSS
 - .NET 10 LTS and ASP.NET Core Controller API
-- Clean Architecture with lightweight CQRS contracts
+- Clean Architecture with CQRS dispatched by MediatR
 - Entity Framework Core with PostgreSQL
 - RabbitMQ client configuration
 - PostgreSQL 18.6 and RabbitMQ 4.3.5 through Docker Compose
@@ -22,7 +22,7 @@ ESDEMO/
 ├── backend/
 │   ├── src/
 │   │   ├── ESDEMO.Domain/       # Business rules and domain model
-│   │   ├── ESDEMO.Application/  # Use cases and CQRS contracts
+│   │   ├── ESDEMO.Application/  # Use cases, CQRS handlers and contracts
 │   │   ├── ESDEMO.Infrastructure/# EF Core and external services
 │   │   └── ESDEMO.Api/          # Controllers and HTTP contracts
 │   ├── tests/ESDEMO.Tests/

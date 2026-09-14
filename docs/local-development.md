@@ -65,6 +65,12 @@ POST http://localhost:5000/api/examples/validate-text
 GET  http://localhost:5000/openapi/v1.json
 ```
 
+## Request logs
+
+The API writes structured request logs to the terminal running `dotnet run`. Each entry includes the HTTP method, path, status code, elapsed time and trace ID. Request bodies, authorization headers, cookies and query strings are intentionally excluded.
+
+Successful requests are logged at `Information`, client errors at `Warning`, and server errors at `Error`. Health endpoints use `Debug` to keep normal development output quiet.
+
 ## Run the frontend
 
 Create the ignored frontend environment file once:

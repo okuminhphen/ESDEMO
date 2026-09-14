@@ -35,7 +35,7 @@ The project is intentionally empty until the first domain concept is known. Avoi
 
 ### Application
 
-Contains use cases, CQRS commands/queries, validation rules and interfaces required from external systems. The initial code defines small CQRS contracts without selecting a mediator library.
+Contains use cases, CQRS commands/queries, handlers, validation rules and interfaces required from external systems. Commands and queries implement MediatR request contracts, are dispatched through `ISender`, and handlers are registered from the Application assembly.
 
 A future feature should be grouped by use case:
 
@@ -109,7 +109,6 @@ When messaging is introduced:
 - Authentication and authorization mechanism
 - Worker process
 - Outbox/inbox implementation
-- Generic mediator package
 - Domain repositories
 - Frontend client-state library
 - Container images for the API and frontend

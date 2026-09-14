@@ -1,6 +1,7 @@
 using DotNetEnv;
 using ESDEMO.Api.Health;
 using ESDEMO.Api.Middleware;
+using ESDEMO.Application;
 using ESDEMO.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -32,6 +33,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services
@@ -58,6 +60,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseExceptionHandler();
 
