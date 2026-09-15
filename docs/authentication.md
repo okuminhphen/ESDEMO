@@ -4,7 +4,7 @@
 
 The backend exposes registration, login, rotating refresh tokens, logout and the current-user endpoint. Public registration creates only Customer; Admin is provisioned by the explicit database initializer. Authentication uses ASP.NET Core Identity and signed JWTs. Existing tables support this feature, so no additional migration is needed.
 
-This is a first-party application auth API, not an OAuth/OIDC authorization server. Frontend/BFF sessions, email verification, password recovery and Admin MFA are still pending. Public registration currently permits login before email verification; EmailConfirmed remains false. Do not treat that email address as verified.
+This is a first-party application auth API, not an OAuth/OIDC authorization server. The Next.js frontend now provides a BFF session for its own auth and Admin Product routes. Email verification, password recovery and Admin MFA are still pending. Public registration currently permits login before email verification; EmailConfirmed remains false. Do not treat that email address as verified.
 
 ## Contracts and code placement
 
@@ -86,7 +86,7 @@ Registration does not return tokens; call login afterward. Supplying role/roles 
 - Auth responses use no-store. Auth body size is limited to 16 KiB. Request logging omits bodies, tokens, cookies and authorization headers. Provider details are not exposed in auth errors, including Development.
 - Auth endpoints share a per-IP fixed-window limiter (default 30 requests/minute per process). Failed validation also consumes the limit. This is single-instance protection; configure a gateway/distributed limit and trusted proxy handling before running behind a BFF/reverse proxy or multiple API instances. Untrusted forwarded headers are not used.
 - Backend role policies are ready for product/order endpoints. Authorization probes exist only in the test assembly, not the shipped API.
-- Require HTTPS outside local development. The future Next.js BFF must keep tokens server-side and give browsers an opaque HttpOnly/Secure cookie with CSRF protection. Do not store tokens in localStorage. Browser/BFF session handling has not been implemented here.
+- Require HTTPS outside local development. The implemented Next.js BFF uses an encrypted `HttpOnly`, `SameSite=Lax` session cookie and checks unexpected browser origins on unsafe routes. Browser JavaScript does not receive JWTs. The current cookie is sealed with `BFF_SESSION_SECRET`; a distributed production deployment that needs central session revocation should use an opaque ID backed by a shared store. Do not store tokens in localStorage.
 
 Errors use ProblemDetails with a traceId: 400 validation (with errors), 401 unauthenticated/invalid credentials/session, 403 forbidden, 409 registration conflict, 413 oversized body, 429 rate-limited (Retry-After), and a generic 500 for unexpected auth failures.
 

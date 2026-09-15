@@ -2,7 +2,7 @@
 
 ## Trạng thái và quy tắc thực hiện
 
-- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration, bootstrap Identity, auth backend và CRUD sản phẩm cho Admin đã được triển khai.
+- Trạng thái: backend model/auth/Admin Product CRUD và frontend nền tảng/auth/Admin Product workspace đã được triển khai.
 - Chỉ bắt đầu code chức năng khi người dùng nói "proceed" hoặc yêu cầu triển khai rõ ràng.
 - Giữ file này trong quá trình triển khai; cập nhật tiến độ bằng checklist.
 - Chỉ xóa `plan.md` khi toàn bộ phạm vi đã hoàn thành, kiểm thử đạt và nội dung cần duy trì đã chuyển sang README/docs.
@@ -23,8 +23,10 @@
 - [x] Kiểm thử: 29/29 test backend đạt; thử Admin local và HTTP 413 trên Kestrel. README/docs đã cập nhật; auth không cần migration mới.
 - [x] CRUD sản phẩm cho Admin: DTO + validation HTTP/MediatR, repository theo feature, phân trang/tìm kiếm, tạo/sửa/xóa mềm và kiểm tra version xmin.
 - [x] Hoàn tất kiểm thử và review CRUD sản phẩm cho Admin: 6 luồng tích hợp PostgreSQL bao phủ quyền, validation, CRUD, phân trang/tìm kiếm, SKU conflict và concurrent/stale write; toàn bộ backend đạt 35/35 test.
+- [x] Frontend nền tảng: Keyvo-inspired responsive UI, feature-based structure, React Hook Form/Zod, Axios, TanStack Query, Zustand và xử lý loading/error/toast.
+- [x] Frontend BFF/Auth/Admin Product: login/register/logout/me, sealed HttpOnly session cookie, refresh-on-401, route guard giao diện và CRUD Product Admin kết nối API thật.
 - [ ] API danh sách/chi tiết sản phẩm công khai, đơn hàng và thanh toán.
-- Frontend/BFF, API sản phẩm công khai/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. Tiếp tục giữ plan.md.
+- API sản phẩm công khai/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. BFF hiện dùng sealed cookie; production nhiều instance cần opaque session store chung. Tiếp tục giữ plan.md.
 - Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
 - Hợp đồng API quản lý sản phẩm và cách thử: [docs/products.md](docs/products.md).
 
@@ -97,8 +99,8 @@ Phần sản phẩm đã triển khai trong backend:
 
 ### Next.js và cấu hình
 
-- Dùng BFF mỏng: browser gọi Next.js; Next.js giữ access/refresh token phía server và gọi .NET.
-- Browser chỉ giữ session cookie opaque; thiết kế session store phía server, có thể dùng PostgreSQL để chưa cần thêm Redis.
+- Dùng BFF mỏng: browser gọi Next.js; Next.js gọi .NET với access/refresh token đã được mã hóa trong sealed HttpOnly session cookie.
+- Browser không đọc được JWT/refresh token. Với production nhiều instance cần revocation tập trung, thay sealed cookie bằng session ID opaque và shared session store (PostgreSQL/Redis).
 - Cookie HttpOnly, Secure khi dùng HTTPS, SameSite phù hợp; có chống CSRF cho request thay đổi trạng thái.
 - Không lưu JWT/refresh token trong localStorage hoặc sessionStorage.
 - Không cache dữ liệu cá nhân dùng chung giữa các user; bảo vệ route và xử lý 401/403 rõ ràng.
@@ -146,7 +148,7 @@ Quy tắc:
 | OutboxMessages | Id, EventType, Payload, OccurredAt, ProcessedAt, RetryCount, thông tin lỗi/retry |
 | Notifications | Id, UserId, OrderId, SourceEventId, nội dung, CreatedAt, ReadAt |
 
-Identity có thể sinh thêm bảng claim/token/external login theo cấu hình. BFF cần session store phía server; chốt bảng/session integration khi triển khai authentication, không dùng biến global trong process để lưu phiên production.
+Identity có thể sinh thêm bảng claim/token/external login theo cấu hình. Frontend hiện dùng sealed cookie do Next.js mã hóa; không dùng biến global trong process để lưu phiên. Khi cần revoke session tập trung hoặc chạy nhiều instance, thêm session ID opaque và shared store.
 
 Quan hệ:
 
@@ -233,11 +235,11 @@ Application/
 
 ## 9. Thứ tự triển khai
 
-- [x] 1. Chốt auth backend: JWT 10 phút, refresh 7 ngày với rotation/reuse; email verification, password recovery, MFA và BFF để bước sau. Chi tiết trong docs/authentication.md.
+- [x] 1. Chốt auth backend: JWT 10 phút, refresh 7 ngày với rotation/reuse; BFF sealed-cookie đã triển khai; email verification, password recovery và MFA để bước sau. Chi tiết trong docs/authentication.md.
 - [x] 2a. Backend: Identity, migrations user/role/session, bootstrap Admin, DTO/validation, register/login/refresh/logout/me và role policies.
-- [ ] 2b. Frontend/BFF, giao diện auth, email verification, password recovery và MFA.
+- [x] 2b. Frontend/BFF nền tảng, giao diện auth và Admin Product. Email verification, password recovery và MFA còn chờ.
 - [x] 3a. Product entity/migration, Admin CRUD/soft delete, DTO/validation, tìm kiếm/phân trang và concurrency.
-- [ ] 3b. Danh sách/chi tiết sản phẩm công khai và giao diện sản phẩm/Admin.
+- [ ] 3b. Danh sách/chi tiết sản phẩm công khai và giao diện Customer; giao diện Admin Product đã hoàn tất.
 - [ ] 4. Order/OrderItems, mua ngay, snapshot giá, checkout và lịch sử/chi tiết đơn có ownership check.
 - [ ] 5. Mock payment, transaction, idempotency, concurrency và xử lý hết hàng/hết hạn.
 - [ ] 6. Outbox, Worker, RabbitMQ, consumer notification, retry và dead-letter handling.

@@ -75,18 +75,20 @@ Product DTOs live in Application/Products/Dtos and receive validation at both th
 
 ## Frontend structure
 
-`frontend/src/app` owns routes, layouts, loading/error boundaries and page composition. Reusable code belongs outside the route tree:
+`frontend/src/app` owns routes, layouts, loading/error boundaries, page composition and fixed BFF Route Handlers. Reusable code belongs outside the route tree:
 
 ```text
 src/
 ├── app/
 ├── components/
 ├── features/
-├── lib/
-└── types/
+├── lib/       # server-only BFF session/http, browser HTTP and query utilities
+└── stores/    # transient UI state only
 ```
 
-Use Server Components by default. Add a Client Component when browser APIs, local interaction or client-side state are required. Server Components should call the .NET API directly through `lib/api`; a BFF Route Handler should be added only for a concrete need such as cookie-based session handling.
+Use Server Components by default. Add a Client Component when browser APIs, local interaction, forms or client-side queries are required. `features/auth` and `features/products` keep each capability's components, Zod schemas, API functions and types together. React Hook Form/Zod own form validation, TanStack Query owns server-state cache/invalidation, and Zustand owns only the responsive Admin sidebar; credentials and API records never enter Zustand.
+
+Browser code calls same-origin Next.js Route Handlers through Axios. Those BFF routes have an explicit upstream allowlist, hold a sealed `HttpOnly` session cookie, add the Bearer access token server-side, rotate through the backend refresh endpoint once on a 401, and reject unexpected browser origins on unsafe requests. The compact cookie is JWE-encrypted with the server-only `BFF_SESSION_SECRET`; it is not accessible from browser JavaScript. .NET remains the authorization authority. A distributed deployment that needs central session revocation should replace the sealed-cookie session with an opaque ID and a shared session store.
 
 ## PostgreSQL and EF Core
 
@@ -111,11 +113,11 @@ When messaging is introduced:
 
 ## Decisions intentionally deferred
 
-- Frontend/BFF sessions, email verification, password recovery and Admin MFA
+- Email verification, password recovery and Admin MFA
 - Worker process
 - Outbox/inbox implementation
 - Repositories for ordering and payment use cases
-- Frontend client-state library
+- Public catalog, checkout and account frontend workflows
 - Container images for the API and frontend
 - Production deployment topology
 

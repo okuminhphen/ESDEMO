@@ -73,7 +73,7 @@ Set Jwt__Issuer, Jwt__Audience and a random Base64 Jwt__SigningKey in the ignore
 
 After database initialization, log in with the seeded Admin account and pass the returned accessToken in the Authorization: Bearer header. All /api/admin/products endpoints require Admin; a Customer token receives 403. The API provides list/detail/create/update and soft-delete operations. See [Admin products](products.md) for DTOs, PowerShell examples, pagination and the required version on update/delete.
 
-This feature uses the existing Products table and xmin concurrency mapping. An already initialized local database needs no additional migration or seed. Public product browsing and the frontend product pages are still pending.
+This feature uses the existing Products table and xmin concurrency mapping. An already initialized local database needs no additional migration or seed. The Admin Product frontend is implemented; public Customer product browsing remains pending its dedicated backend API.
 
 ## Request logs
 
@@ -96,7 +96,18 @@ pnpm --dir frontend install
 pnpm --dir frontend dev
 ```
 
-The home page calls the API readiness endpoint from the Next.js server. Set `API_BASE_URL` in `frontend/.env.local` to the API address for the active environment.
+The home page calls the API readiness endpoint from the Next.js server. Set `API_BASE_URL` in `frontend/.env.local` to the API address for the active environment. Generate a separate session-encryption key and add it without the `NEXT_PUBLIC_` prefix:
+
+```powershell
+[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+```
+
+```dotenv
+API_BASE_URL=http://localhost:5000
+BFF_SESSION_SECRET=<generated-base64-32-byte-key>
+```
+
+The Next.js BFF uses this key to encrypt its `HttpOnly` session cookie. It calls the backend with the access token server-side and refreshes once on a 401; browser JavaScript never receives either token. The frontend currently connects login/register and all Admin Product screens. Read [frontend/README.md](../frontend/README.md) for the route and architecture reference.
 
 ## Build and test
 

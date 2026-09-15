@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The backend includes the initial purchasing schema and an explicit Admin initializer. Register/login/refresh/logout/me and Admin product CRUD are implemented. Public product browsing, ordering and payment endpoints remain pending. See [Authentication](docs/authentication.md), [Admin products](docs/products.md) and [Database model](docs/database-model.md).
+The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The frontend provides a Keyvo-inspired landing page, Customer auth screens and an Admin product workspace through a Next.js BFF session. The backend includes the initial purchasing schema and an explicit Admin initializer. Public product browsing, ordering and payment endpoints remain pending. See [Authentication](docs/authentication.md), [Admin products](docs/products.md), [Frontend](frontend/README.md) and [Database model](docs/database-model.md).
 
 ## Technology
 
@@ -59,6 +59,12 @@ Generate a random signing key and put it in the root .env as Jwt__SigningKey:
 ```
 
 The committed example intentionally leaves this secret empty. See [auth configuration and API examples](docs/authentication.md).
+
+Generate a separate 32-byte key and put it in `frontend/.env.local` as `BFF_SESSION_SECRET`:
+
+```powershell
+[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+```
 
 Start the API in a second terminal:
 
@@ -123,7 +129,10 @@ Frontend server configuration:
 
 ```text
 API_BASE_URL=http://localhost:5000
+BFF_SESSION_SECRET=<Base64-encoded-32-byte-key>
 ```
+
+`BFF_SESSION_SECRET` is a server-only key that encrypts the frontend's HttpOnly session cookie. Do not use `NEXT_PUBLIC_` for either frontend configuration value.
 
 For complete setup, troubleshooting and migration commands, read [Local development](docs/local-development.md).
 
