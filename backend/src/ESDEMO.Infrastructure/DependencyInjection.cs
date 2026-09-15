@@ -1,5 +1,6 @@
 using ESDEMO.Application.Auth.Abstractions;
 using ESDEMO.Application.Products.Abstractions;
+using ESDEMO.Application.Orders.Abstractions;
 using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Options;
 using ESDEMO.Infrastructure.Persistence;
@@ -66,6 +67,7 @@ public static class DependencyInjection
 
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICustomerOrderRepository, CustomerOrderRepository>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<DummyPasswordHash>();
         services.AddScoped<IAuthService, IdentityAuthService>();

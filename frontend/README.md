@@ -1,6 +1,6 @@
 # ESDEMO frontend
 
-Next.js 16 App Router frontend for ESDEMO. It provides the landing page, Customer registration/login and the connected Admin product-management workflow.
+Next.js 16 App Router frontend for ESDEMO. It provides the landing page, Customer registration/login, public catalog, mock checkout, private purchase history, and the connected Admin product-management workflow.
 
 ## Run locally
 
@@ -34,7 +34,7 @@ The .NET API and Docker infrastructure must be running. See the root [local-deve
 
 Browser JavaScript never receives an access token or refresh token. On login, the Next.js Route Handler calls the .NET API, encrypts the token pair in a compact JWE, and stores the ciphertext in the `esdemo_session` cookie. The cookie is `HttpOnly`, `SameSite=Lax`, scoped to `/`, and becomes `Secure` in production. On a backend 401, the BFF refreshes the session once and updates the cookie before retrying the fixed upstream request.
 
-The BFF exposes only explicit auth and Admin Product routes; it is not a general proxy. It checks an unexpected browser `Origin` on unsafe methods, and all authorization remains enforced by .NET.
+The BFF exposes only explicit auth, catalog, Customer order and Admin Product routes; it is not a general proxy. It checks an unexpected browser `Origin` on unsafe methods, and all authorization remains enforced by .NET.
 
 This sealed-cookie design is appropriate for the current single application. A multi-instance production deployment needing central session revocation should replace it with an opaque session ID backed by a shared PostgreSQL/Redis store. Do not place JWTs in localStorage, sessionStorage, URLs, Zustand or Postman-like browser variables.
 
@@ -42,11 +42,14 @@ This sealed-cookie design is appropriate for the current single application. A m
 
 - `/` landing page and backend readiness status
 - `/login`, `/register`
+- `/products`, `/products/[id]`, `/checkout`, `/orders`, `/orders/[id]`
 - `/admin`, `/admin/products`, `/admin/products/new`, `/admin/products/[id]/edit`
 - `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`
+- `/api/products`, `/api/products/[id]`
+- `/api/orders`, `/api/orders/[id]`, `/api/orders/[id]/pay`
 - `/api/admin/products`, `/api/admin/products/[id]`
 
-Public product browsing, checkout and order history intentionally wait for their Customer-facing backend APIs.
+Catalog, checkout and order history call explicit Next.js BFF routes. Checkout is intentionally a mock payment: it accepts only the exact VND amount that the backend calculates for the pending order.
 
 ## Checks
 

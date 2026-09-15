@@ -2,7 +2,7 @@
 
 ## Current status
 
-The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication and Admin product CRUD are implemented; public product browsing, ordering and payment endpoints remain pending.
+The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication, Admin product CRUD, public catalog, Customer orders and mock payment are implemented; the RabbitMQ publisher and notification consumer remain pending.
 
 ApplicationDbContext inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>. It calls the base Identity mapping first, then loads IEntityTypeConfiguration implementations from Infrastructure.
 
@@ -117,7 +117,7 @@ dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 
 The command applies pending migrations and performs idempotent Identity bootstrap, then exits without starting the HTTP server. It can be run again safely. Do not use `EnsureCreated` on the application database, and do not run migrations automatically during every API startup.
 
-Authentication handlers, JWT/refresh-session behavior and Admin product CRUD are implemented. Admin list queries explicitly exclude soft-deleted products by default, allow inactive products and can include deleted products when requested; Admin detail reads can return deleted products. Public product queries remain pending and must restrict results to active, nondeleted products. See [Admin products](products.md) for DTOs and concurrency handling.
+Authentication handlers, JWT/refresh-session behavior, Admin product CRUD, public catalog, Customer orders and mock payment are implemented. Admin list queries explicitly exclude soft-deleted products by default, allow inactive products and can include deleted products when requested; Admin detail reads can return deleted products. Public product queries return only active, nondeleted products. See [Admin products](products.md) and [Customer orders](orders.md) for API contracts.
 
 ## References
 

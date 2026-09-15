@@ -25,8 +25,8 @@
 - [x] Hoàn tất kiểm thử và review CRUD sản phẩm cho Admin: 6 luồng tích hợp PostgreSQL bao phủ quyền, validation, CRUD, phân trang/tìm kiếm, SKU conflict và concurrent/stale write; toàn bộ backend đạt 35/35 test.
 - [x] Frontend nền tảng: Keyvo-inspired responsive UI, feature-based structure, React Hook Form/Zod, Axios, TanStack Query, Zustand và xử lý loading/error/toast.
 - [x] Frontend BFF/Auth/Admin Product: login/register/logout/me, sealed HttpOnly session cookie, refresh-on-401, route guard giao diện và CRUD Product Admin kết nối API thật.
-- [ ] API danh sách/chi tiết sản phẩm công khai, đơn hàng và thanh toán.
-- API sản phẩm công khai/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. BFF hiện dùng sealed cookie; production nhiều instance cần opaque session store chung. Tiếp tục giữ plan.md.
+- [x] API danh sách/chi tiết sản phẩm công khai, đơn hàng và thanh toán mock; BFF và Customer UI đã kết nối.
+- Outbox OrderPaid được ghi trong transaction thanh toán; Worker RabbitMQ/notification consumer chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. BFF hiện dùng sealed cookie; production nhiều instance cần opaque session store chung. Tiếp tục giữ plan.md.
 - Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
 - Hợp đồng API quản lý sản phẩm và cách thử: [docs/products.md](docs/products.md).
 
@@ -239,9 +239,9 @@ Application/
 - [x] 2a. Backend: Identity, migrations user/role/session, bootstrap Admin, DTO/validation, register/login/refresh/logout/me và role policies.
 - [x] 2b. Frontend/BFF nền tảng, giao diện auth và Admin Product. Email verification, password recovery và MFA còn chờ.
 - [x] 3a. Product entity/migration, Admin CRUD/soft delete, DTO/validation, tìm kiếm/phân trang và concurrency.
-- [ ] 3b. Danh sách/chi tiết sản phẩm công khai và giao diện Customer; giao diện Admin Product đã hoàn tất.
-- [ ] 4. Order/OrderItems, mua ngay, snapshot giá, checkout và lịch sử/chi tiết đơn có ownership check.
-- [ ] 5. Mock payment, transaction, idempotency, concurrency và xử lý hết hàng/hết hạn.
+- [x] 3b. Danh sách/chi tiết sản phẩm công khai và giao diện Customer; giao diện Admin Product đã hoàn tất.
+- [x] 4. Order/OrderItems, mua ngay, snapshot giá, checkout và lịch sử/chi tiết đơn có ownership check.
+- [x] 5. Mock payment, transaction, idempotency, conditional stock decrement và xử lý hết hàng/hết hạn.
 - [ ] 6. Outbox, Worker, RabbitMQ, consumer notification, retry và dead-letter handling.
 - [ ] 7. Kiểm thử toàn luồng, rà bảo mật theo phạm vi, cập nhật README/docs/.env.example/CI nếu cần.
 - [ ] 8. Sau khi hoàn thành toàn bộ: chuyển thông tin lâu dài vào docs, xóa plan.md và commit; không push tự động.

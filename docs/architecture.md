@@ -117,7 +117,7 @@ When messaging is introduced:
 - Worker process
 - Outbox/inbox implementation
 - Repositories for ordering and payment use cases
-- Public catalog, checkout and account frontend workflows
+- RabbitMQ outbox publisher and notification consumer
 - Container images for the API and frontend
 - Production deployment topology
 

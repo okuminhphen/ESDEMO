@@ -4,7 +4,7 @@
 
 The backend exposes registration, login, rotating refresh tokens, logout and the current-user endpoint. Public registration creates only Customer; Admin is provisioned by the explicit database initializer. Authentication uses ASP.NET Core Identity and signed JWTs. Existing tables support this feature, so no additional migration is needed.
 
-This is a first-party application auth API, not an OAuth/OIDC authorization server. The Next.js frontend now provides a BFF session for its own auth and Admin Product routes. Email verification, password recovery and Admin MFA are still pending. Public registration currently permits login before email verification; EmailConfirmed remains false. Do not treat that email address as verified.
+This is a first-party application auth API, not an OAuth/OIDC authorization server. The Next.js frontend now provides a BFF session for its own auth, catalog, Customer order and Admin Product routes. Email verification, password recovery and Admin MFA are still pending. Public registration currently permits login before email verification; EmailConfirmed remains false. Do not treat that email address as verified.
 
 ## Contracts and code placement
 

@@ -2,7 +2,7 @@
 
 ## Implemented scope
 
-Admins can list, inspect, create, update and soft-delete products. Every endpoint under `/api/admin/products` requires an authenticated account with the current `Admin` role. Missing or invalid authentication returns 401; a Customer account receives 403. The public catalog and product frontend remain pending.
+Admins can list, inspect, create, update and soft-delete products. Every endpoint under `/api/admin/products` requires an authenticated account with the current `Admin` role. Missing or invalid authentication returns 401; a Customer account receives 403. The public catalog is available at `/api/products`; Customer-facing order and checkout behavior is documented in [Customer orders](orders.md).
 
 The existing `Products` table and PostgreSQL `xmin` concurrency mapping support this feature. No additional migration, environment variable or RabbitMQ worker is required. Keep the database initialization and JWT configuration from [Local development](local-development.md) and [Authentication](authentication.md).
 
