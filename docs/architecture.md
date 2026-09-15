@@ -57,7 +57,7 @@ Commands change state. Queries only read and return application models. Both may
 
 ### Infrastructure
 
-Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin; business repositories and messaging workers remain future steps.
+Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin. Product persistence uses a feature-specific EF repository; messaging workers remain pending.
 
 Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specific repository when a use case needs persistence behavior that should be expressed in domain terms.
 
@@ -70,6 +70,8 @@ The sample `POST /api/examples/validate-text` endpoint demonstrates ASP.NET Core
 Validation errors use `ValidationProblemDetails`. Other errors use Problem Details and include a trace identifier. Auth failures never expose provider details, including in Development.
 
 Auth DTOs and DataAnnotations live in Application/Auth/Dtos and are shared with the API. MediatR validates each auth command payload before dispatch. Infrastructure implements IAuthService using Identity and transactional PostgreSQL operations; controllers do not expose Identity entities. JWT middleware checks account status and current roles. See [Authentication](authentication.md).
+
+Product DTOs live in Application/Products/Dtos and receive validation at both the HTTP boundary and MediatR dispatch. Application handlers own create/update/soft-delete behavior and depend on a Products repository interface in Application. Infrastructure implements that interface with EF Core, including DTO projection, search, paging and persistence-error translation. Every /api/admin/products endpoint requires the Admin policy. Responses expose an explicit version value from PostgreSQL xmin; update/delete require the last-read version to reject stale writes with 409. See [Admin products](products.md).
 
 ## Frontend structure
 
@@ -93,6 +95,7 @@ Use Server Components by default. Add a Client Component when browser APIs, loca
 - Entity configuration uses `IEntityTypeConfiguration<TEntity>` rather than large configuration blocks in `DbContext`.
 - Read-only queries should project to DTOs and use no tracking.
 - A migration is committed together with the model change that requires it.
+- Admin product CRUD uses the existing Products schema and xmin mapping; it does not require a new migration. Each product mutation is saved atomically with SaveChanges; this feature needs neither a transaction spanning multiple saves nor RabbitMQ events.
 
 ## RabbitMQ
 
@@ -111,7 +114,7 @@ When messaging is introduced:
 - Frontend/BFF sessions, email verification, password recovery and Admin MFA
 - Worker process
 - Outbox/inbox implementation
-- Domain repositories
+- Repositories for ordering and payment use cases
 - Frontend client-state library
 - Container images for the API and frontend
 - Production deployment topology

@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The backend includes the initial purchasing schema and an explicit Admin initializer. Register/login/refresh/logout/me are implemented; product and purchasing endpoints remain the next step. See [Authentication](docs/authentication.md) and [Database model](docs/database-model.md).
+The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The backend includes the initial purchasing schema and an explicit Admin initializer. Register/login/refresh/logout/me and Admin product CRUD are implemented. Public product browsing, ordering and payment endpoints remain pending. See [Authentication](docs/authentication.md), [Admin products](docs/products.md) and [Database model](docs/database-model.md).
 
 ## Technology
 
@@ -137,7 +137,7 @@ For complete setup, troubleshooting and migration commands, read [Local developm
 
 See [Contributing](CONTRIBUTING.md) for the suggested Git workflow.
 
-## Adding the first feature
+## Adding another feature
 
 Add one vertical slice at a time. For a future Tasks feature, for example:
 
@@ -150,7 +150,7 @@ ESDEMO.Api/Controllers/TasksController.cs
 ESDEMO.Api/Contracts/Tasks/
 ```
 
-Create repositories, workers, outbox/inbox processing, state-management libraries and other abstractions only when a real use case needs them.
+The existing Products feature demonstrates validated DTOs, MediatR handlers and a feature-specific repository. Its Admin API supports pagination, search, create/update and soft deletion with optimistic concurrency. Follow [Admin products](docs/products.md) for request examples. Add workers, outbox/inbox processing, state-management libraries and other abstractions when a use case needs them.
 
 ## Stop local infrastructure
 

@@ -1,7 +1,9 @@
 using ESDEMO.Application.Auth.Abstractions;
+using ESDEMO.Application.Products.Abstractions;
 using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Options;
 using ESDEMO.Infrastructure.Persistence;
+using ESDEMO.Infrastructure.Persistence.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -63,6 +65,7 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddScoped<DatabaseInitializer>();
+        services.AddScoped<IProductRepository, ProductRepository>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<DummyPasswordHash>();
         services.AddScoped<IAuthService, IdentityAuthService>();

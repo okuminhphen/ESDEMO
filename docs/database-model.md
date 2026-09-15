@@ -2,7 +2,7 @@
 
 ## Current status
 
-The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication endpoints are implemented; purchasing endpoints remain pending.
+The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication and Admin product CRUD are implemented; public product browsing, ordering and payment endpoints remain pending.
 
 ApplicationDbContext inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>. It calls the base Identity mapping first, then loads IEntityTypeConfiguration implementations from Infrastructure.
 
@@ -42,14 +42,14 @@ No PurchaseHistory table is needed: query paid Orders and their immutable-at-cre
 - PaymentAttempts and Notifications reference Orders through the composite (OrderId, UserId) foreign key. The database rejects an owner that differs from the order owner.
 - RefreshSession replacement references (Id, UserId, FamilyId), preventing rotation into another account or token family.
 - All added business/auth-session relationships use RESTRICT for deletion. Built-in Identity support relationships keep the Identity defaults.
-- Products are discontinued by setting IsActive=false and DeletedAt. Updating only DeletedAt while leaving IsActive=true is rejected.
+- Admin product DELETE sets IsActive=false and DeletedAt, retaining the row and existing history references. Updating only DeletedAt while leaving IsActive=true is rejected. Deleted products cannot be updated through the Admin API; the API has no restore operation.
 - No global product query filter is installed: it could unexpectedly hide products from history. Public catalog queries must explicitly filter IsActive and DeletedAt.
 - Notifications deliberately have no foreign key to OutboxMessages: outbox records can be archived independently.
 
 ## Database invariants
 
 - Unique normalized user email, normalized username, SKU and order number.
-- SKU is uppercase ASCII letters/digits with optional underscores/hyphens, maximum 64 characters. Future input handling must normalize it before persistence.
+- SKU is uppercase ASCII letters/digits with optional underscores/hyphens, maximum 64 characters. Product input handling trims and uppercases it before persistence. The unique SKU constraint also covers soft-deleted rows, so their SKUs remain reserved.
 - Product names and snapshots are nonblank and at most 200 characters.
 - Prices/amounts are between zero and 999999999999999999 inclusive and must be whole VND.
 - Monetary columns use unconstrained numeric plus CHECK constraints. numeric(p, 0) would silently round fractional input before a check could reject it.
@@ -68,18 +68,16 @@ Indexes cover user order history, order expiry, payment history, refresh familie
 
 ## Guarantees still requiring use-case code
 
-These persistence models deliberately do not implement workflow handlers yet. Database constraints do not substitute for domain/application validation.
+Authentication handlers and Admin product CRUD enforce the implemented use cases. Product writes validate DTOs, normalize input and translate duplicate SKUs or stale xmin versions to HTTP 409. The last-read version is required on update/delete, including when multiple Admins edit concurrently. Each product mutation uses one atomic SaveChanges operation; the existing schema requires no new migration. Database constraints complement application validation.
 
 Future handlers must enforce:
 
-- Ownership and role authorization before queries or writes.
+- Order ownership and Customer authorization before queries or writes.
 - Server-side price lookup, snapshot creation, nonempty orders and total = sum of item price * quantity.
-- Customer-only registration, role assignment, account status, email normalization and password policy.
 - Valid state transitions, order expiry, product availability and payment amount = order total.
 - Atomic payment + order + inventory + outbox transaction.
 - Idempotency-key reuse with a different payload must be rejected, not merely caught as a unique violation.
-- Translate concurrency/constraint failures into appropriate application errors and coordinate explicit transactions with EF retry execution strategies.
-- Safe refresh rotation, family reuse handling, revocation and token lifetime policy.
+- Translate ordering/payment concurrency and constraint failures into appropriate application errors and coordinate explicit transactions with EF retry execution strategies.
 - Restrict snapshot/ownership updates; add aggregate behavior as the business commands are implemented.
 - Safe multi-worker outbox claiming, delivery confirmation/retry and consumer deduplication.
 - Log sanitized error codes rather than credentials or raw broker exception payloads.
@@ -119,7 +117,7 @@ dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 
 The command applies pending migrations and performs idempotent Identity bootstrap, then exits without starting the HTTP server. It can be run again safely. Do not use `EnsureCreated` on the application database, and do not run migrations automatically during every API startup.
 
-Authentication handlers, JWT/refresh-session behavior and API authorization are implemented. The next application step is product CRUD with Admin policies and public product queries.
+Authentication handlers, JWT/refresh-session behavior and Admin product CRUD are implemented. Admin list queries explicitly exclude soft-deleted products by default, allow inactive products and can include deleted products when requested; Admin detail reads can return deleted products. Public product queries remain pending and must restrict results to active, nondeleted products. See [Admin products](products.md) for DTOs and concurrency handling.
 
 ## References
 

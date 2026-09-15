@@ -18,6 +18,7 @@ public sealed class GlobalExceptionHandler(
             RequestValidationException => StatusCodes.Status400BadRequest,
             AuthenticationFailedException => StatusCodes.Status401Unauthorized,
             ConflictException => StatusCodes.Status409Conflict,
+            NotFoundException => StatusCodes.Status404NotFound,
             BadHttpRequestException badRequest => badRequest.StatusCode,
             _ => StatusCodes.Status500InternalServerError
         };

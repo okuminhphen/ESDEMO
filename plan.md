@@ -2,7 +2,7 @@
 
 ## Trạng thái và quy tắc thực hiện
 
-- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration, bootstrap Identity và auth backend đã được triển khai.
+- Trạng thái: đang triển khai backend theo từng phần được yêu cầu; model, migration, bootstrap Identity, auth backend và CRUD sản phẩm cho Admin đã được triển khai.
 - Chỉ bắt đầu code chức năng khi người dùng nói "proceed" hoặc yêu cầu triển khai rõ ràng.
 - Giữ file này trong quá trình triển khai; cập nhật tiến độ bằng checklist.
 - Chỉ xóa `plan.md` khi toàn bộ phạm vi đã hoàn thành, kiểm thử đạt và nội dung cần duy trì đã chuyển sang README/docs.
@@ -10,7 +10,7 @@
 - Không tự push. Người dùng tự push, trừ khi yêu cầu push rõ ràng cho lần đó.
 - Không tự merge `develop` vào `main`.
 
-## Tiến độ hiện tại: model backend
+## Tiến độ hiện tại: backend
 
 - [x] Định nghĩa Product, Order, OrderItem, PaymentAttempt, Notification và enum trạng thái.
 - [x] ApplicationUser/Identity, RefreshSession và OutboxMessage ở Infrastructure.
@@ -21,9 +21,12 @@
 - [x] Seed idempotent role Admin/Customer và một Admin cấu hình từ `.env` local.
 - [x] Auth backend: DTO + validation, MediatR register/login/refresh/logout/me, JWT, role policy, lockout và refresh rotation/reuse.
 - [x] Kiểm thử: 29/29 test backend đạt; thử Admin local và HTTP 413 trên Kestrel. README/docs đã cập nhật; auth không cần migration mới.
-- [ ] Các use case sản phẩm, đơn hàng và thanh toán.
-- Frontend/BFF, API sản phẩm/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. Tiếp tục giữ plan.md.
+- [x] CRUD sản phẩm cho Admin: DTO + validation HTTP/MediatR, repository theo feature, phân trang/tìm kiếm, tạo/sửa/xóa mềm và kiểm tra version xmin.
+- [x] Hoàn tất kiểm thử và review CRUD sản phẩm cho Admin: 6 luồng tích hợp PostgreSQL bao phủ quyền, validation, CRUD, phân trang/tìm kiếm, SKU conflict và concurrent/stale write; toàn bộ backend đạt 35/35 test.
+- [ ] API danh sách/chi tiết sản phẩm công khai, đơn hàng và thanh toán.
+- Frontend/BFF, API sản phẩm công khai/đơn hàng/thanh toán và Worker chưa triển khai. Xác minh email, quên mật khẩu và MFA còn chờ; đăng ký hiện chưa yêu cầu email đã xác minh. Tiếp tục giữ plan.md.
 - Chi tiết model và giới hạn hiện tại: [docs/database-model.md](docs/database-model.md).
+- Hợp đồng API quản lý sản phẩm và cách thử: [docs/products.md](docs/products.md).
 
 ## 1. Phạm vi và giả định
 
@@ -46,6 +49,15 @@ Giả định đề xuất, có thể điều chỉnh trước khi triển khai:
 - Có tồn kho; chưa giữ hàng khi tạo đơn, kiểm tra và trừ kho lúc thanh toán.
 - Admin chưa có chức năng mua hàng hoặc xem toàn bộ đơn hàng trong phạm vi này.
 - Xóa sản phẩm là soft delete/ngừng bán để bảo toàn lịch sử đơn hàng.
+
+Phần sản phẩm đã triển khai trong backend:
+
+- Tất cả endpoint `/api/admin/products` yêu cầu Admin; có list/detail/create/update/delete.
+- DTO tạo/sửa chứa SKU, tên, mô tả, giá VND nguyên, tồn kho và trạng thái bán; giá/tồn kho/trạng thái phải được gửi rõ ràng. SKU được trim và đổi uppercase; unique bao gồm cả sản phẩm đã xóa mềm.
+- DTO trả về có `version`; update/delete yêu cầu version vừa đọc, dữ liệu cũ trả 409 để client tải lại trước khi sửa.
+- List phân trang mặc định 20, tối đa 100; tìm kiếm SKU/tên không phân biệt hoa thường, lọc isActive và tùy chọn includeDeleted. Mặc định không trả sản phẩm đã xóa mềm nhưng vẫn trả sản phẩm ngừng bán.
+- Xóa mềm giữ dòng dữ liệu; GET chi tiết cho Admin vẫn đọc được, PUT sản phẩm đã xóa trả 404. Chưa có khôi phục hoặc xóa vĩnh viễn.
+- Dùng schema hiện tại; mỗi lệnh ghi một SaveChanges nguyên tử, chưa cần RabbitMQ cho CRUD sản phẩm.
 
 ## 2. Ma trận quyền
 
@@ -224,7 +236,8 @@ Application/
 - [x] 1. Chốt auth backend: JWT 10 phút, refresh 7 ngày với rotation/reuse; email verification, password recovery, MFA và BFF để bước sau. Chi tiết trong docs/authentication.md.
 - [x] 2a. Backend: Identity, migrations user/role/session, bootstrap Admin, DTO/validation, register/login/refresh/logout/me và role policies.
 - [ ] 2b. Frontend/BFF, giao diện auth, email verification, password recovery và MFA.
-- [ ] 3. Product entity/migration, Admin CRUD/soft delete, danh sách/chi tiết cho khách, validation và giao diện.
+- [x] 3a. Product entity/migration, Admin CRUD/soft delete, DTO/validation, tìm kiếm/phân trang và concurrency.
+- [ ] 3b. Danh sách/chi tiết sản phẩm công khai và giao diện sản phẩm/Admin.
 - [ ] 4. Order/OrderItems, mua ngay, snapshot giá, checkout và lịch sử/chi tiết đơn có ownership check.
 - [ ] 5. Mock payment, transaction, idempotency, concurrency và xử lý hết hàng/hết hạn.
 - [ ] 6. Outbox, Worker, RabbitMQ, consumer notification, retry và dead-letter handling.
