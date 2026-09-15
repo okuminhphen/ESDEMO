@@ -8,7 +8,8 @@ using ESDEMO.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace ESDEMO.Tests.Persistence;
+using ESDEMO.Tests.Integration.Fixtures;
+namespace ESDEMO.Tests.Integration.Persistence;
 
 public sealed class PostgresConstraintTests(PostgresDatabaseFixture database)
     : IClassFixture<PostgresDatabaseFixture>
@@ -302,3 +303,7 @@ public sealed class PostgresConstraintTests(PostgresDatabaseFixture database)
         Assert.Equal(sqlState, Assert.IsType<PostgresException>(error.InnerException).SqlState);
     }
 }
+
+
+
+

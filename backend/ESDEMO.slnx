@@ -6,6 +6,7 @@
     <Project Path="src/ESDEMO.Infrastructure/ESDEMO.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/ESDEMO.Tests/ESDEMO.Tests.csproj" />
+    <Project Path="tests/ESDEMO.UnitTests/ESDEMO.UnitTests.csproj" />
+    <Project Path="tests/ESDEMO.IntegrationTests/ESDEMO.IntegrationTests.csproj" />
   </Folder>
 </Solution>

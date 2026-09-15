@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ESDEMO.Tests.Persistence;
+using ESDEMO.Tests.Integration.Fixtures;
+namespace ESDEMO.Tests.Integration.Persistence;
 
 public sealed class IdentityDataInitializerTests(PostgresDatabaseFixture database)
     : IClassFixture<PostgresDatabaseFixture>
@@ -51,3 +52,7 @@ public sealed class IdentityDataInitializerTests(PostgresDatabaseFixture databas
         Assert.True(await userManager.CheckPasswordAsync(admin, password));
     }
 }
+
+
+
+

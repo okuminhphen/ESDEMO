@@ -4,7 +4,8 @@ using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace ESDEMO.Tests.Persistence;
+using ESDEMO.Tests.Integration.Fixtures;
+namespace ESDEMO.Tests.Integration.Persistence;
 
 public sealed class ApplicationModelTests
 {
@@ -56,3 +57,7 @@ public sealed class ApplicationModelTests
             .UseNpgsql("Host=localhost;Database=model_generation_only")
             .Options);
 }
+
+
+
+

@@ -6,8 +6,7 @@ using ESDEMO.Application.Orders.Dtos;
 using ESDEMO.Application.Products.Dtos;
 using ESDEMO.Domain.Products;
 using ESDEMO.Infrastructure.Persistence;
-using ESDEMO.Tests.Auth;
-using ESDEMO.Tests.Persistence;
+using ESDEMO.Tests.Integration.Fixtures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -87,7 +86,7 @@ public sealed class CustomerOrderApiTests(PostgresDatabaseFixture database) : IC
     private static async Task<Product> AddProductAsync(AuthApiFactory factory, string sku = "ORDER-PRODUCT")
     {
         await using var scope = factory.Services.CreateAsyncScope();
-        var product = new Product { Sku = $"{sku}-{Guid.NewGuid():N}"[..Math.Min(30, sku.Length + 33)], Name = "Order product", Price = 25_000, StockQuantity = 1, IsActive = true };
+        var product = new Product { Sku = $"{sku}-{Guid.NewGuid():N}".ToUpperInvariant()[..Math.Min(30, sku.Length + 33)], Name = "Order product", Price = 25_000, StockQuantity = 1, IsActive = true };
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         db.Products.Add(product);
         await db.SaveChangesAsync();
@@ -107,3 +106,8 @@ public sealed class CustomerOrderApiTests(PostgresDatabaseFixture database) : IC
     private static void Authorize(HttpClient client, TokenResponseDto tokens) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 }
+
+
+
+
+

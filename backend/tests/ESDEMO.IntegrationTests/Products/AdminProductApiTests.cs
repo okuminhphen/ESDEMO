@@ -9,8 +9,7 @@ using ESDEMO.Application.Products.Commands.CreateProduct;
 using ESDEMO.Application.Products.Dtos;
 using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Persistence;
-using ESDEMO.Tests.Auth;
-using ESDEMO.Tests.Persistence;
+using ESDEMO.Tests.Integration.Fixtures;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -297,3 +296,7 @@ public sealed class AdminProductApiTests(PostgresDatabaseFixture database)
     private static string UniqueSku(string prefix) => $"{prefix}-{Guid.NewGuid():N}".ToUpperInvariant();
     private static string NewEmail(string prefix) => $"{prefix}-{Guid.NewGuid():N}@example.test";
 }
+
+
+
+
