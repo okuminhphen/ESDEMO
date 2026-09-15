@@ -1,6 +1,6 @@
 using ESDEMO.Application.Auth.Abstractions;
-using ESDEMO.Application.Products.Abstractions;
 using ESDEMO.Application.Orders.Abstractions;
+using ESDEMO.Application.Products.Abstractions;
 using ESDEMO.Infrastructure.Identity;
 using ESDEMO.Infrastructure.Options;
 using ESDEMO.Infrastructure.Persistence;
@@ -16,38 +16,13 @@ namespace ESDEMO.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services
-            .AddOptions<DatabaseOptions>()
-            .Configure(options => options.ConnectionString = configuration.GetConnectionString("Database") ?? string.Empty)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services
-            .AddOptions<RabbitMqOptions>()
-            .Bind(configuration.GetSection(RabbitMqOptions.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        services.AddPersistenceAndMessaging(configuration);
 
         services
             .AddOptions<AdminSeedOptions>()
             .Bind(configuration.GetSection(AdminSeedOptions.SectionName));
-
-        services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
-        {
-            var databaseOptions = serviceProvider
-                .GetRequiredService<IOptions<DatabaseOptions>>()
-                .Value;
-
-            options.UseNpgsql(databaseOptions.ConnectionString, npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
-                npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
-            });
-        });
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
@@ -79,12 +54,39 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.Configure<PasswordHasherOptions>(options => options.IterationCount = 220_000);
 
+        return services;
+    }
+
+    public static IServiceCollection AddWorkerInfrastructure(this IServiceCollection services, IConfiguration configuration) =>
+        services.AddPersistenceAndMessaging(configuration);
+
+    private static IServiceCollection AddPersistenceAndMessaging(this IServiceCollection services, IConfiguration configuration)
+    {
+        services
+            .AddOptions<DatabaseOptions>()
+            .Configure(options => options.ConnectionString = configuration.GetConnectionString("Database") ?? string.Empty)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services
+            .AddOptions<RabbitMqOptions>()
+            .Bind(configuration.GetSection(RabbitMqOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+        {
+            var databaseOptions = serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+            options.UseNpgsql(databaseOptions.ConnectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+                npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
+            });
+        });
+
         services.AddSingleton(serviceProvider =>
         {
-            var options = serviceProvider
-                .GetRequiredService<IOptions<RabbitMqOptions>>()
-                .Value;
-
+            var options = serviceProvider.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
             return new ConnectionFactory
             {
                 HostName = options.Host,

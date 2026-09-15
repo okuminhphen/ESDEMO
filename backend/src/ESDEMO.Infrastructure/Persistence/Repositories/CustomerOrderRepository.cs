@@ -151,9 +151,9 @@ public sealed class CustomerOrderRepository(ApplicationDbContext db) : ICustomer
             });
             db.OutboxMessages.Add(new OutboxMessage
             {
-                EventType = "OrderPaid",
+                EventType = RabbitMqTopology.OrderPaidEventType,
                 OccurredAt = now,
-                Payload = JsonSerializer.Serialize(new { eventId = Guid.NewGuid(), orderId = order.Id, userId, order.OrderNumber, order.TotalAmount, order.Currency, occurredAt = now })
+                Payload = JsonSerializer.Serialize(new OrderPaidIntegrationEvent(Guid.NewGuid(), order.Id, userId, order.OrderNumber, order.TotalAmount, order.Currency, now))
             });
             try
             {

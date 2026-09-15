@@ -10,4 +10,6 @@ public sealed class OutboxMessage
     public int RetryCount { get; set; }
     public DateTimeOffset? NextAttemptAt { get; set; }
     public string? LastError { get; set; }
+    public Guid? LeaseId { get; set; }
+    public DateTimeOffset? LeaseExpiresAt { get; set; }
 }

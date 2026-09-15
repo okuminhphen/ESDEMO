@@ -39,10 +39,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-if (!initializeDatabase)
-{
-    builder.Services.AddApiAuthentication(builder.Configuration);
-}
+builder.Services.AddApiAuthentication(builder.Configuration);
 
 builder.Services
     .AddHealthChecks()

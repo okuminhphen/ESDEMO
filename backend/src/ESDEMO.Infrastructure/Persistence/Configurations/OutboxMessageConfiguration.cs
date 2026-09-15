@@ -19,6 +19,7 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(message => message.EventType).HasMaxLength(200).IsRequired();
         builder.Property(message => message.Payload).HasColumnType("jsonb").IsRequired();
         builder.Property(message => message.LastError).HasMaxLength(2000);
+        builder.HasIndex(message => new { message.ProcessedAt, message.LeaseExpiresAt, message.NextAttemptAt, message.OccurredAt });
         builder.HasIndex(message => new { message.NextAttemptAt, message.OccurredAt })
             .HasFilter("\"ProcessedAt\" IS NULL");
         builder.Property<uint>("Version").IsRowVersion();

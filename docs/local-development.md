@@ -61,7 +61,7 @@ Useful endpoints:
 ```text
 GET  http://localhost:5000/health/live
 GET  http://localhost:5000/health/ready
-POST http://localhost:5000/api/examples/validate-text
+GET  http://localhost:5000/api/products
 GET  http://localhost:5000/openapi/v1.json
 ```
 
@@ -73,7 +73,7 @@ Set Jwt__Issuer, Jwt__Audience and a random Base64 Jwt__SigningKey in the ignore
 
 After database initialization, log in with the seeded Admin account and pass the returned accessToken in the Authorization: Bearer header. All /api/admin/products endpoints require Admin; a Customer token receives 403. The API provides list/detail/create/update and soft-delete operations. See [Admin products](products.md) for DTOs, PowerShell examples, pagination and the required version on update/delete.
 
-This feature uses the existing Products table and xmin concurrency mapping. An already initialized local database needs no additional migration or seed. The Admin Product frontend, public Customer catalog, mock checkout and private order history are implemented. RabbitMQ publishing and notifications remain pending.
+This feature uses the existing Products table and xmin concurrency mapping. An already initialized local database needs no additional migration or seed. The Admin Product frontend, public Customer catalog, mock checkout and private order history are implemented. Start `dotnet run --project backend/src/ESDEMO.Worker` after applying the pending migration to publish events and create notifications; see [RabbitMQ outbox](rabbitmq-outbox.md).
 
 ## Request logs
 

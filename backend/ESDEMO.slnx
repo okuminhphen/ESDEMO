@@ -4,6 +4,7 @@
     <Project Path="src/ESDEMO.Application/ESDEMO.Application.csproj" />
     <Project Path="src/ESDEMO.Domain/ESDEMO.Domain.csproj" />
     <Project Path="src/ESDEMO.Infrastructure/ESDEMO.Infrastructure.csproj" />
+    <Project Path="src/ESDEMO.Worker/ESDEMO.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ESDEMO.UnitTests/ESDEMO.UnitTests.csproj" />

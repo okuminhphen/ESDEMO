@@ -2,7 +2,7 @@
 
 ## Current status
 
-The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` migration. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication, Admin product CRUD, public catalog, Customer orders and mock payment are implemented; the RabbitMQ publisher and notification consumer remain pending.
+The backend defines the persistence model from the purchasing plan and includes the `InitialSchema` and `AddOutboxLeases` migrations. The explicit database initializer applies pending migrations, creates the `Admin` and `Customer` roles and optionally creates the configured Admin account. Authentication, Admin product CRUD, public catalog, Customer orders and mock payment are implemented; the RabbitMQ Outbox Worker and notification consumer are implemented; see [RabbitMQ outbox](rabbitmq-outbox.md).
 
 ApplicationDbContext inherits from IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>. It calls the base Identity mapping first, then loads IEntityTypeConfiguration implementations from Infrastructure.
 
@@ -29,7 +29,7 @@ Identity user/role stores, password hashing, login lockout and refresh-session p
 | OrderItems | OrderId, ProductId, ProductNameSnapshot, UnitPrice, Quantity |
 | PaymentAttempts | OrderId, UserId, IdempotencyKey, RequestHash, EnteredAmount, Currency, Provider, Status, CreatedAt, CompletedAt, FailureCode |
 | RefreshSessions | UserId, FamilyId, TokenHash, CreatedAt, ExpiresAt, RevokedAt, ReplacedById |
-| OutboxMessages | EventType, JSON object Payload, OccurredAt, ProcessedAt, RetryCount, NextAttemptAt, LastError |
+| OutboxMessages | EventType, JSON object Payload, OccurredAt, ProcessedAt, RetryCount, NextAttemptAt, LastError, LeaseId, LeaseExpiresAt, LeaseId, LeaseExpiresAt |
 | Notifications | UserId, OrderId, SourceEventId, Title, Message, CreatedAt, ReadAt |
 
 No PurchaseHistory table is needed: query paid Orders and their immutable-at-creation item snapshots. BFF/browser sessions remain deferred with frontend work.
@@ -79,34 +79,22 @@ Future handlers must enforce:
 - Idempotency-key reuse with a different payload must be rejected, not merely caught as a unique violation.
 - Translate ordering/payment concurrency and constraint failures into appropriate application errors and coordinate explicit transactions with EF retry execution strategies.
 - Restrict snapshot/ownership updates; add aggregate behavior as the business commands are implemented.
-- Safe multi-worker outbox claiming, delivery confirmation/retry and consumer deduplication.
+- Business handling for future event types beyond `OrderPaid.v1`.
 - Log sanitized error codes rather than credentials or raw broker exception payloads.
 
 The schema does not enforce sums or state consistency across separate rows/tables. In particular, a successful payment row alone does not prove an Order is Paid or inventory was deducted.
 
 ## Validation
 
-Regular checks (from the repository root):
+Run from the repository root:
 
 ```powershell
 dotnet build backend/ESDEMO.slnx --configuration Release
-dotnet test backend/ESDEMO.slnx --configuration Release --no-build
+dotnet test backend/tests/ESDEMO.UnitTests/ESDEMO.UnitTests.csproj
+dotnet test backend/tests/ESDEMO.IntegrationTests/ESDEMO.IntegrationTests.csproj
 ```
 
-Without ESDEMO_RUN_DATABASE_TESTS=1, the PostgreSQL integration tests are explicitly skipped. The model-generation tests still run without any database connection.
-
-To run integration tests, set these variables in the test process:
-
-- ESDEMO_RUN_DATABASE_TESTS=1
-- ESDEMO_TEST_POSTGRES_HOST (default localhost)
-- ESDEMO_TEST_POSTGRES_PORT (default 5432)
-- ESDEMO_TEST_POSTGRES_USER (default esdemo)
-- ESDEMO_TEST_POSTGRES_PASSWORD (required, supply locally; never commit)
-
-Run dotnet test again. Tests connect to the maintenance database postgres, create a database named esdemo_model_tests_<random>, apply the committed migrations, run tests, and drop that exact test database afterward. Use a local/test PostgreSQL account permitted to create databases. The application database esdemo is not used. If the test process is forcibly terminated, a disposable database may remain for manual cleanup.
-
-Coverage includes migration application, idempotent role/Admin seeding, duplicate email, invalid money/stock/status, single successful payment, order ownership foreign keys, history retention, xmin concurrency, refresh family isolation, idempotency uniqueness, JSON outbox validation and event deduplication.
-
+Integration tests use a disposable PostgreSQL Testcontainer. Docker Desktop must be running, but the tests do not use the local `esdemo` database, port 5432 or `ESDEMO_TEST_POSTGRES_*` values. CI runs unit and integration suites in separate jobs.
 ## Initialize a local database
 
 Set the Admin bootstrap values in the ignored root `.env`. The committed example keeps seeding disabled and contains no usable password. Then run from the repository root:

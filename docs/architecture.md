@@ -57,7 +57,7 @@ Commands change state. Queries only read and return application models. Both may
 
 ### Infrastructure
 
-Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin. Product persistence uses a feature-specific EF repository; messaging workers remain pending.
+Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin. Product persistence uses a feature-specific EF repository. `ESDEMO.Worker` owns the Outbox publisher and notification consumer; see [RabbitMQ outbox](rabbitmq-outbox.md).
 
 Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specific repository when a use case needs persistence behavior that should be expressed in domain terms.
 
@@ -65,7 +65,7 @@ Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specifi
 
 Contains controllers, request/response contracts, middleware, OpenAPI and operational health checks. Controllers translate HTTP input to a use case and HTTP output from a result; they do not own business logic.
 
-The sample `POST /api/examples/validate-text` endpoint demonstrates ASP.NET Core DTO validation. Replace it with the first real feature when the contract pattern is understood.
+API request and response DTOs live with their feature in `Application/<Feature>/Dtos`; controllers reuse those contracts, keeping the demo convention simple and consistent.
 
 Validation errors use `ValidationProblemDetails`. Other errors use Problem Details and include a trace identifier. Auth failures never expose provider details, including in Development.
 
@@ -101,23 +101,13 @@ Browser code calls same-origin Next.js Route Handlers through Axios. Those BFF r
 
 ## RabbitMQ
 
-RabbitMQ is available in local infrastructure, and connection options are validated when the API starts. The baseline does not include a producer, consumer or Worker because no asynchronous use case exists yet.
+RabbitMQ carries the `OrderPaid.v1` integration event between processes. The payment transaction writes the event into PostgreSQL Outbox; `ESDEMO.Worker` claims events with leases, waits for publisher confirms, and only then marks Outbox rows processed. Its notification consumer acknowledges after persisting an idempotent `Notification`; failed or invalid messages go to the durable DLQ. See [RabbitMQ outbox](rabbitmq-outbox.md).
 
-When messaging is introduced:
-
-- CQRS commands and queries remain in-process application concepts.
-- RabbitMQ carries integration events between processes.
-- Database changes and outgoing events should use an outbox when they must succeed together.
-- Consumers must be idempotent and acknowledge only after successful processing.
-- Retry and dead-letter behavior must be explicit.
-
+CQRS commands and queries remain in-process application concepts. Messaging is reserved for integration events, not request/response flows.
 ## Decisions intentionally deferred
 
 - Email verification, password recovery and Admin MFA
-- Worker process
-- Outbox/inbox implementation
 - Repositories for ordering and payment use cases
-- RabbitMQ outbox publisher and notification consumer
 - Container images for the API and frontend
 - Production deployment topology
 

@@ -2,7 +2,7 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The frontend provides a Keyvo-inspired landing page, Customer auth screens and an Admin product workspace through a Next.js BFF session. The backend includes the initial purchasing schema and an explicit Admin initializer. Customer catalog, order creation, mock payment and private order history are available. The RabbitMQ outbox worker and notification consumer remain pending. See [Authentication](docs/authentication.md), [Admin products](docs/products.md), [Frontend](frontend/README.md), [Customer orders](docs/orders.md) and [Database model](docs/database-model.md).
+The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The frontend provides a Keyvo-inspired landing page, Customer auth screens and an Admin product workspace through a Next.js BFF session. The backend includes the initial purchasing schema and an explicit Admin initializer. Customer catalog, order creation, mock payment and private order history are available. The RabbitMQ outbox worker publishes confirmed order events and creates idempotent notifications. See [Authentication](docs/authentication.md), [Admin products](docs/products.md), [Frontend](frontend/README.md), [Customer orders](docs/orders.md), [RabbitMQ outbox](docs/rabbitmq-outbox.md) and [Database model](docs/database-model.md).
 
 ## Technology
 
@@ -10,7 +10,7 @@ The starter provides health checks, authentication through Identity/JWT, DTO val
 - .NET 10 LTS and ASP.NET Core Controller API
 - Clean Architecture with CQRS dispatched by MediatR
 - Entity Framework Core with PostgreSQL
-- RabbitMQ client configuration
+- RabbitMQ Outbox Worker with publisher confirms, leases, backoff and DLQ
 - PostgreSQL 18.6 and RabbitMQ 4.3.5 through Docker Compose
 - xUnit and GitHub Actions
 
@@ -24,8 +24,10 @@ ESDEMO/
 │   │   ├── ESDEMO.Domain/       # Business rules and domain model
 │   │   ├── ESDEMO.Application/  # Use cases, CQRS handlers and contracts
 │   │   ├── ESDEMO.Infrastructure/# EF Core and external services
-│   │   └── ESDEMO.Api/          # Controllers and HTTP contracts
-│   ├── tests/ESDEMO.Tests/
+│   │   ├── ESDEMO.Api/          # Controllers and HTTP contracts
+│   │   └── ESDEMO.Worker/       # Outbox publisher and notification consumer
+│   ├── tests/ESDEMO.UnitTests/
+│   ├── tests/ESDEMO.IntegrationTests/
 │   └── ESDEMO.slnx
 ├── docs/
 ├── .github/workflows/ci.yml
@@ -75,7 +77,13 @@ dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
-Start the frontend in a third terminal:
+Start the Worker in a third backend terminal:
+
+```powershell
+dotnet run --project backend/src/ESDEMO.Worker
+```
+
+Start the frontend in a fourth terminal:
 
 ```powershell
 pnpm --dir frontend install
@@ -159,7 +167,7 @@ ESDEMO.Api/Controllers/TasksController.cs
 ESDEMO.Api/Contracts/Tasks/
 ```
 
-The existing Products feature demonstrates validated DTOs, MediatR handlers and a feature-specific repository. Its Admin API supports pagination, search, create/update and soft deletion with optimistic concurrency. Follow [Admin products](docs/products.md) for request examples. Add workers, outbox/inbox processing, state-management libraries and other abstractions when a use case needs them.
+The existing Products feature demonstrates validated DTOs, MediatR handlers and a feature-specific repository. Its Admin API supports pagination, search, create/update and soft deletion with optimistic concurrency. Follow [Admin products](docs/products.md) for request examples. Add state-management libraries and other abstractions when a use case needs them.
 
 ## Stop local infrastructure
 

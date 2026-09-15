@@ -5,6 +5,7 @@ using ESDEMO.Application.Auth.Dtos;
 using ESDEMO.Application.Orders.Dtos;
 using ESDEMO.Application.Products.Dtos;
 using ESDEMO.Domain.Products;
+using ESDEMO.Infrastructure.Messaging;
 using ESDEMO.Infrastructure.Persistence;
 using ESDEMO.Tests.Integration.Fixtures;
 using Microsoft.EntityFrameworkCore;
@@ -51,7 +52,7 @@ public sealed class CustomerOrderApiTests(PostgresDatabaseFixture database) : IC
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(0, await db.Products.Where(item => item.Id == product.Id).Select(item => item.StockQuantity).SingleAsync());
-        Assert.Single(await db.OutboxMessages.Where(message => message.EventType == "OrderPaid").ToListAsync());
+        Assert.Single(await db.OutboxMessages.Where(message => message.EventType == RabbitMqTopology.OrderPaidEventType).ToListAsync());
     }
 
     [PostgresFact]
@@ -106,8 +107,3 @@ public sealed class CustomerOrderApiTests(PostgresDatabaseFixture database) : IC
     private static void Authorize(HttpClient client, TokenResponseDto tokens) =>
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
 }
-
-
-
-
-
