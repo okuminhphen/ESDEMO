@@ -55,6 +55,4 @@ Keep the lease longer than the expected broker confirm timeout. In production su
 3. In RabbitMQ Management, the notification queue should drain to zero; its DLQ should remain empty.
 4. Query `OutboxMessages`: the row has `ProcessedAt`; query `Notifications`: one row exists for the order/user.
 
-For a broker outage test, stop RabbitMQ, pay an order, then start RabbitMQ. The Outbox row remains pending and is delivered after the broker comes back. No API retry is needed.
-
-
+The integration suite runs this flow against disposable PostgreSQL and RabbitMQ Testcontainers: payment API → Outbox → publisher confirm → consumer → one notification, then deliberately republishes the same event to prove deduplication. A second test uses an unreachable broker and verifies that the event remains pending with retry/backoff. You can still perform the same outage exercise manually by stopping RabbitMQ, paying an order, then starting it again.

@@ -94,7 +94,7 @@ dotnet test backend/tests/ESDEMO.UnitTests/ESDEMO.UnitTests.csproj
 dotnet test backend/tests/ESDEMO.IntegrationTests/ESDEMO.IntegrationTests.csproj
 ```
 
-Integration tests use a disposable PostgreSQL Testcontainer. Docker Desktop must be running, but the tests do not use the local `esdemo` database, port 5432 or `ESDEMO_TEST_POSTGRES_*` values. CI runs unit and integration suites in separate jobs.
+Integration tests use disposable PostgreSQL and RabbitMQ Testcontainers. Docker Desktop must be running, but the tests do not use the local `esdemo` database, port 5432, local RabbitMQ, or `ESDEMO_TEST_POSTGRES_*` values. CI runs unit and integration suites in separate jobs.
 ## Initialize a local database
 
 Set the Admin bootstrap values in the ignored root `.env`. The committed example keeps seeding disabled and contains no usable password. Then run from the repository root:
