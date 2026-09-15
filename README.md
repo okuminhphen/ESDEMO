@@ -2,15 +2,15 @@
 
 ESDEMO is a minimal full-stack starter for learning and building features with clear boundaries. The repository contains a Next.js frontend, an ASP.NET Core API following Clean Architecture, and local PostgreSQL/RabbitMQ infrastructure managed by Docker Compose.
 
-The initial `main` branch intentionally contains no business domain. It provides a runnable baseline, health checks, one DTO-validation example, tests, and CI so future features can be added from `develop` without first rebuilding the foundation.
+The starter provides health checks, authentication through Identity/JWT, DTO validation, MediatR, tests and CI. The frontend provides a Keyvo-inspired landing page, Customer auth screens and an Admin product workspace through a Next.js BFF session. The backend includes the initial purchasing schema and an explicit Admin initializer. Customer catalog, order creation, mock payment and private order history are available. The RabbitMQ outbox worker publishes confirmed order events and creates idempotent notifications. See [Authentication](docs/authentication.md), [Admin products](docs/products.md), [Frontend](frontend/README.md), [Customer orders](docs/orders.md), [RabbitMQ outbox](docs/rabbitmq-outbox.md) and [Database model](docs/database-model.md).
 
 ## Technology
 
 - Next.js 16, React 19, TypeScript and Tailwind CSS
 - .NET 10 LTS and ASP.NET Core Controller API
-- Clean Architecture with lightweight CQRS contracts
+- Clean Architecture with CQRS dispatched by MediatR
 - Entity Framework Core with PostgreSQL
-- RabbitMQ client configuration
+- RabbitMQ Outbox Worker with publisher confirms, leases, backoff and DLQ
 - PostgreSQL 18.6 and RabbitMQ 4.3.5 through Docker Compose
 - xUnit and GitHub Actions
 
@@ -22,10 +22,12 @@ ESDEMO/
 ├── backend/
 │   ├── src/
 │   │   ├── ESDEMO.Domain/       # Business rules and domain model
-│   │   ├── ESDEMO.Application/  # Use cases and CQRS contracts
+│   │   ├── ESDEMO.Application/  # Use cases, CQRS handlers and contracts
 │   │   ├── ESDEMO.Infrastructure/# EF Core and external services
-│   │   └── ESDEMO.Api/          # Controllers and HTTP contracts
-│   ├── tests/ESDEMO.Tests/
+│   │   ├── ESDEMO.Api/          # Controllers and HTTP contracts
+│   │   └── ESDEMO.Worker/       # Outbox publisher and notification consumer
+│   ├── tests/ESDEMO.UnitTests/
+│   ├── tests/ESDEMO.IntegrationTests/
 │   └── ESDEMO.slnx
 ├── docs/
 ├── .github/workflows/ci.yml
@@ -43,12 +45,27 @@ Requirements:
 - pnpm 10
 - Docker Desktop with Docker Compose
 
-From the repository root, create an optional local environment file and start infrastructure:
+From the repository root, create the local configuration files and start infrastructure:
 
 ```powershell
 Copy-Item .env.example .env
+Copy-Item frontend/.env.example frontend/.env.local
 docker compose up -d
 docker compose ps
+```
+
+Generate a random signing key and put it in the root .env as Jwt__SigningKey:
+
+```powershell
+[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(64))
+```
+
+The committed example intentionally leaves this secret empty. See [auth configuration and API examples](docs/authentication.md).
+
+Generate a separate 32-byte key and put it in `frontend/.env.local` as `BFF_SESSION_SECRET`:
+
+```powershell
+[Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
 ```
 
 Start the API in a second terminal:
@@ -56,10 +73,17 @@ Start the API in a second terminal:
 ```powershell
 dotnet tool restore --tool-manifest backend/.config/dotnet-tools.json
 dotnet restore backend/ESDEMO.slnx
+dotnet run --project backend/src/ESDEMO.Api -- --initialize-database
 dotnet run --project backend/src/ESDEMO.Api
 ```
 
-Start the frontend in a third terminal:
+Start the Worker in a third backend terminal:
+
+```powershell
+dotnet run --project backend/src/ESDEMO.Worker
+```
+
+Start the frontend in a fourth terminal:
 
 ```powershell
 pnpm --dir frontend install
@@ -76,7 +100,7 @@ Open these URLs:
 | OpenAPI document | http://localhost:5000/openapi/v1.json |
 | RabbitMQ management | http://localhost:15672 |
 
-RabbitMQ's local username/password are `esdemo` / `esdemo-dev`. These values are development defaults only.
+Database, RabbitMQ and optional local Admin bootstrap settings are read from `.env`. Set a strong local `SeedAdmin__Password` and enable the seed before running the explicit database initializer. The values in `.env.example` are public examples, not real secrets.
 
 ## Verify the repository
 
@@ -92,7 +116,7 @@ The readiness endpoint reports PostgreSQL and RabbitMQ separately. The frontend 
 
 ## Configuration
 
-Development defaults are stored in `appsettings.Development.json` and match Docker Compose defaults. Real credentials must be supplied with environment variables and must never be committed.
+Local runtime configuration lives in the ignored root `.env`; copy `.env.example` before running Docker or the API. `appsettings.json` contains only empty configuration shape and safe logging defaults. Production credentials must be supplied by the deployment platform as environment variables or a secret manager and must never be committed.
 
 Common ASP.NET Core overrides:
 
@@ -103,13 +127,20 @@ RabbitMq__Port
 RabbitMq__Username
 RabbitMq__Password
 RabbitMq__VirtualHost
+SeedAdmin__Enabled
+SeedAdmin__Email
+SeedAdmin__DisplayName
+SeedAdmin__Password
 ```
 
 Frontend server configuration:
 
 ```text
 API_BASE_URL=http://localhost:5000
+BFF_SESSION_SECRET=<Base64-encoded-32-byte-key>
 ```
+
+`BFF_SESSION_SECRET` is a server-only key that encrypts the frontend's HttpOnly session cookie. Do not use `NEXT_PUBLIC_` for either frontend configuration value.
 
 For complete setup, troubleshooting and migration commands, read [Local development](docs/local-development.md).
 
@@ -123,7 +154,7 @@ For complete setup, troubleshooting and migration commands, read [Local developm
 
 See [Contributing](CONTRIBUTING.md) for the suggested Git workflow.
 
-## Adding the first feature
+## Adding another feature
 
 Add one vertical slice at a time. For a future Tasks feature, for example:
 
@@ -136,7 +167,7 @@ ESDEMO.Api/Controllers/TasksController.cs
 ESDEMO.Api/Contracts/Tasks/
 ```
 
-Create repositories, workers, outbox/inbox processing, state-management libraries and other abstractions only when a real use case needs them.
+The existing Products feature demonstrates validated DTOs, MediatR handlers and a feature-specific repository. Its Admin API supports pagination, search, create/update and soft deletion with optimistic concurrency. Follow [Admin products](docs/products.md) for request examples. Add state-management libraries and other abstractions when a use case needs them.
 
 ## Stop local infrastructure
 

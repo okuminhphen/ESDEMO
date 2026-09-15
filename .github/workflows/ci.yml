@@ -10,8 +10,8 @@ permissions:
   contents: read
 
 jobs:
-  backend:
-    name: Backend
+  backend-unit:
+    name: Backend unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,8 +19,18 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore backend/ESDEMO.slnx
-      - run: dotnet build backend/ESDEMO.slnx --configuration Release --no-restore
-      - run: dotnet test backend/ESDEMO.slnx --configuration Release --no-build
+      - run: dotnet test backend/tests/ESDEMO.UnitTests/ESDEMO.UnitTests.csproj --configuration Release --no-restore
+
+  backend-integration:
+    name: Backend integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore backend/ESDEMO.slnx
+      - run: dotnet test backend/tests/ESDEMO.IntegrationTests/ESDEMO.IntegrationTests.csproj --configuration Release --no-restore
 
   frontend:
     name: Frontend
@@ -44,4 +54,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose config --quiet
+      - run: cp .env.example .env && docker compose config --quiet

@@ -7,12 +7,3 @@ Accept: application/json
 
 GET {{ESDEMO_Api_HostAddress}}/health/ready
 Accept: application/json
-
-###
-
-POST {{ESDEMO_Api_HostAddress}}/api/examples/validate-text
-Content-Type: application/json
-
-{
-  "text": "ESDEMO is running"
-}

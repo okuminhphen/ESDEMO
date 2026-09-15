@@ -31,11 +31,11 @@ The physical references are:
 
 Contains entities, value objects, aggregates, domain services, domain events and business rules. It must not reference Entity Framework Core, RabbitMQ or ASP.NET Core.
 
-The project is intentionally empty until the first domain concept is known. Avoid generic base classes that provide no demonstrated behavior.
+The Domain now defines Product, Order, OrderItem, PaymentAttempt and Notification. Identity-specific user/session types and OutboxMessage live in Infrastructure. Workflow behavior will be added with each use case; see [Database model](database-model.md) for current guarantees and deferred rules.
 
 ### Application
 
-Contains use cases, CQRS commands/queries, validation rules and interfaces required from external systems. The initial code defines small CQRS contracts without selecting a mediator library.
+Contains use cases, CQRS commands/queries, handlers, validation rules and interfaces required from external systems. Commands and queries implement MediatR request contracts, are dispatched through `ISender`, and handlers are registered from the Application assembly.
 
 A future feature should be grouped by use case:
 
@@ -57,7 +57,7 @@ Commands change state. Queries only read and return application models. Both may
 
 ### Infrastructure
 
-Contains Entity Framework Core, PostgreSQL configuration, repository implementations and RabbitMQ integration. `ApplicationDbContext` is configured now, while migrations and repositories wait for the first entity.
+Contains Entity Framework Core, Identity stores, PostgreSQL configuration and RabbitMQ integration. `ApplicationDbContext` derives from IdentityDbContext and loads entity configurations from this assembly. The model and initial migration are implemented. The explicit database initializer applies pending migrations and seeds roles plus an optional configured Admin. Product persistence uses a feature-specific EF repository. `ESDEMO.Worker` owns the Outbox publisher and notification consumer; see [RabbitMQ outbox](rabbitmq-outbox.md).
 
 Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specific repository when a use case needs persistence behavior that should be expressed in domain terms.
 
@@ -65,24 +65,30 @@ Do not add a generic `IRepository<TEntity>` by default. Add an aggregate-specifi
 
 Contains controllers, request/response contracts, middleware, OpenAPI and operational health checks. Controllers translate HTTP input to a use case and HTTP output from a result; they do not own business logic.
 
-The sample `POST /api/examples/validate-text` endpoint demonstrates ASP.NET Core DTO validation. Replace it with the first real feature when the contract pattern is understood.
+API request and response DTOs live with their feature in `Application/<Feature>/Dtos`; controllers reuse those contracts, keeping the demo convention simple and consistent.
 
-Validation errors use `ValidationProblemDetails`. Unhandled exceptions use Problem Details and include a trace identifier; exception details are returned only in Development.
+Validation errors use `ValidationProblemDetails`. Other errors use Problem Details and include a trace identifier. Auth failures never expose provider details, including in Development.
+
+Auth DTOs and DataAnnotations live in Application/Auth/Dtos and are shared with the API. MediatR validates each auth command payload before dispatch. Infrastructure implements IAuthService using Identity and transactional PostgreSQL operations; controllers do not expose Identity entities. JWT middleware checks account status and current roles. See [Authentication](authentication.md).
+
+Product DTOs live in Application/Products/Dtos and receive validation at both the HTTP boundary and MediatR dispatch. Application handlers own create/update/soft-delete behavior and depend on a Products repository interface in Application. Infrastructure implements that interface with EF Core, including DTO projection, search, paging and persistence-error translation. Every /api/admin/products endpoint requires the Admin policy. Responses expose an explicit version value from PostgreSQL xmin; update/delete require the last-read version to reject stale writes with 409. See [Admin products](products.md).
 
 ## Frontend structure
 
-`frontend/src/app` owns routes, layouts, loading/error boundaries and page composition. Reusable code belongs outside the route tree:
+`frontend/src/app` owns routes, layouts, loading/error boundaries, page composition and fixed BFF Route Handlers. Reusable code belongs outside the route tree:
 
 ```text
 src/
 ├── app/
 ├── components/
 ├── features/
-├── lib/
-└── types/
+├── lib/       # server-only BFF session/http, browser HTTP and query utilities
+└── stores/    # transient UI state only
 ```
 
-Use Server Components by default. Add a Client Component when browser APIs, local interaction or client-side state are required. Server Components should call the .NET API directly through `lib/api`; a BFF Route Handler should be added only for a concrete need such as cookie-based session handling.
+Use Server Components by default. Add a Client Component when browser APIs, local interaction, forms or client-side queries are required. `features/auth` and `features/products` keep each capability's components, Zod schemas, API functions and types together. React Hook Form/Zod own form validation, TanStack Query owns server-state cache/invalidation, and Zustand owns only the responsive Admin sidebar; credentials and API records never enter Zustand.
+
+Browser code calls same-origin Next.js Route Handlers through Axios. Those BFF routes have an explicit upstream allowlist, hold a sealed `HttpOnly` session cookie, add the Bearer access token server-side, rotate through the backend refresh endpoint once on a 401, and reject unexpected browser origins on unsafe requests. The compact cookie is JWE-encrypted with the server-only `BFF_SESSION_SECRET`; it is not accessible from browser JavaScript. .NET remains the authorization authority. A distributed deployment that needs central session revocation should replace the sealed-cookie session with an opaque ID and a shared session store.
 
 ## PostgreSQL and EF Core
 
@@ -91,27 +97,17 @@ Use Server Components by default. Add a Client Component when browser APIs, loca
 - Entity configuration uses `IEntityTypeConfiguration<TEntity>` rather than large configuration blocks in `DbContext`.
 - Read-only queries should project to DTOs and use no tracking.
 - A migration is committed together with the model change that requires it.
+- Admin product CRUD uses the existing Products schema and xmin mapping; it does not require a new migration. Each product mutation is saved atomically with SaveChanges; this feature needs neither a transaction spanning multiple saves nor RabbitMQ events.
 
 ## RabbitMQ
 
-RabbitMQ is available in local infrastructure, and connection options are validated when the API starts. The baseline does not include a producer, consumer or Worker because no asynchronous use case exists yet.
+RabbitMQ carries the `OrderPaid.v1` integration event between processes. The payment transaction writes the event into PostgreSQL Outbox; `ESDEMO.Worker` claims events with leases, waits for publisher confirms, and only then marks Outbox rows processed. Its notification consumer acknowledges after persisting an idempotent `Notification`; failed or invalid messages go to the durable DLQ. See [RabbitMQ outbox](rabbitmq-outbox.md).
 
-When messaging is introduced:
-
-- CQRS commands and queries remain in-process application concepts.
-- RabbitMQ carries integration events between processes.
-- Database changes and outgoing events should use an outbox when they must succeed together.
-- Consumers must be idempotent and acknowledge only after successful processing.
-- Retry and dead-letter behavior must be explicit.
-
+CQRS commands and queries remain in-process application concepts. Messaging is reserved for integration events, not request/response flows.
 ## Decisions intentionally deferred
 
-- Authentication and authorization mechanism
-- Worker process
-- Outbox/inbox implementation
-- Generic mediator package
-- Domain repositories
-- Frontend client-state library
+- Email verification, password recovery and Admin MFA
+- Repositories for ordering and payment use cases
 - Container images for the API and frontend
 - Production deployment topology
 
